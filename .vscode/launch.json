@@ -1,0 +1,24 @@
+{
+    "configurations": [
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:MangoStats}",
+            "name": "Debug MangoStats",
+            "target": "MangoStats",
+            "configuration": "debug",
+            "preLaunchTask": "swift: Build Debug MangoStats"
+        },
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:MangoStats}",
+            "name": "Release MangoStats",
+            "target": "MangoStats",
+            "configuration": "release",
+            "preLaunchTask": "swift: Build Release MangoStats"
+        }
+    ]
+}
