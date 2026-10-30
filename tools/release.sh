@@ -69,13 +69,20 @@ fi
 mkdir -p "$dist"
 zip="$dist/$name-$version.zip"
 rm -f "$zip"
-ditto -c -k --keepParent "$app" "$zip"
+ditto -c -k --norsrc --noextattr --keepParent "$app" "$zip"
 print "notarizing (a few minutes)…"
 xcrun notarytool submit "$zip" --keychain-profile "$profile" --wait
 xcrun stapler staple "$app"
 rm -f "$zip"
-ditto -c -k --keepParent "$app" "$zip"
+ditto -c -k --norsrc --noextattr --keepParent "$app" "$zip"
 spctl --assess --type execute -vv "$app"
+# The zip must open with any unzip tool, not just ditto: no ._ files, and
+# Gatekeeper accepts what plain unzip extracts.
+(( $(unzip -Z1 "$zip" | grep -c '/\._') == 0 )) || { print "the zip contains ._ files"; exit 1; }
+check_dir=$(mktemp -d)
+unzip -q "$zip" -d "$check_dir"
+spctl --assess --type execute "$check_dir/$name.app" && print "plain unzip: accepted by Gatekeeper"
+rm -rf "$check_dir"
 
 # Check for Updates: sign the zip with the Sparkle key and add it to the feed.
 # The feed goes online with tools/publish.sh, after the zip is on GitHub.

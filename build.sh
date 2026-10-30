@@ -55,7 +55,9 @@ if [[ -d "$here/Icon/AppIcon.icon" ]]; then
   fi
   cp -X "$car" "$here/Resources/AppIcon.icns" "$app/Contents/Resources/"
 fi
-xattr -cr "$app"
+# -s also clears the framework symlinks: an attribute left on one becomes a ._ file in the
+# release zip, and Gatekeeper rejects ._ files in a framework's root after some unzips.
+xattr -crs "$app"
 # Sign from the inside out, all with the hardened runtime (launchd daemons and
 # notarization need it). Developer ID adds a secure timestamp.
 flags=(--force --options runtime)

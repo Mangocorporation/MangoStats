@@ -19,3 +19,12 @@ Cause: `.contentTransition(.numericText())` and `.animation(…, value:)` re-ren
 popover for ~0.35 s after every 2 s sample.
 Fix: no animations on live values; FanControl writes observed state only when it changes.
 Rule: Don't animate values that update on a timer.
+
+## 2026-10-30 Downloaded 1.0 rejected by Gatekeeper
+Symptom: "MangoStats.app Not Opened" after unzipping the release zip; spctl: "unsealed contents
+present in the root directory of an embedded framework". The same zip extracted with ditto passed.
+Cause: `ditto -c -k` stored extended attributes as `._` files next to Sparkle.framework's symlinks
+(xattr -cr skips symlinks); extractors other than ditto leave them as real files.
+Fix: `xattr -crs` in build.sh, `ditto --norsrc --noextattr` in release.sh, and release.sh now
+extracts the zip with plain `unzip` and requires Gatekeeper to accept it.
+Rule: Test a release the way people open it (plain unzip, quarantined), not only with the tools that built it.
