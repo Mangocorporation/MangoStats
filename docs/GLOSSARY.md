@@ -42,3 +42,6 @@
 | Screen on / Screen can sleep | Whether an app keeps the display on | display awake |
 | Open at login | Start MangoStats when you log in | launch at startup, auto-start |
 | Refresh every | Seconds between samples: 1, 2, or 5 | update rate, polling |
+| Fan control | Letting MangoStats set the fan through its helper | fan override |
+| Helper | The small part of MangoStats that runs as root to set the fan | daemon, service, tool |
+| Auto / Cool / Max | Fan modes: macOS decides / 60 % / full speed | quiet, turbo, boost |

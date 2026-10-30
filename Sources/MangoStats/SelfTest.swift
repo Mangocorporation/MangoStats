@@ -1,5 +1,6 @@
 import AppKit
 import MangoStatsKit
+import MangoStatsSMC
 
 /// Self-test for agents: runs the app's real functions on a test store,
 /// prints PASS or FAIL per check, and quits with exit code 0 or 1.
@@ -83,6 +84,16 @@ enum SelfTest {
             check("the refresh interval survives a restart", AppModel().refreshInterval == 1)
             model.refreshInterval = 2
             print("INFO privacy \(status.privacyText) · \(status.awakeText) (\(status.awakeHelp)) · \(status.screenText)")
+
+            // S-024 to S-026, without touching the real helper (test runs never do).
+            let fan = FanControl.shared
+            check("MangoStats starts with the fan on Auto", fan.wanted == .auto && fan.applied == .auto)
+            fan.pick(.max)
+            check("Cool and Max need fan control turned on", fan.state == .on || fan.wanted == .auto)
+            check("the helper and its launchd plist are in the app bundle",
+                  FileManager.default.fileExists(atPath: Bundle.main.bundlePath + "/Contents/MacOS/MangoStatsHelper")
+                  && FileManager.default.fileExists(atPath: Bundle.main.bundlePath
+                      + "/Contents/Library/LaunchDaemons/\(FanHelper.plistName)"))
 
             // S-014: Quit ends a process of this user.
             let child = Process()

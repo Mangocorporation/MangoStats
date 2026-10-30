@@ -80,7 +80,13 @@ final class Sampler {
         }.value
         if readDisk { disk = (reading.disk, reading.time) }
         let update = builder.update(reading, network: network, previous: model.status)
-        model.status = update.status
+        // Fan control (S-025): send the wanted mode, then show what is applied.
+        FanControl.shared.tick()
+        var status = update.status
+        if let fan = reading.sensors.fans.first {
+            status.fanNote = FanPolicy.note(FanControl.shared.applied, min: fan.min, max: fan.max)
+        }
+        model.status = status
         model.menuValues = update.menuValues
     }
 }

@@ -64,6 +64,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     /// The self-test's result becomes the exit code, after a normal quit.
     func applicationWillTerminate(_ notification: Notification) {
+        // Never leave the fan forced (S-026).
+        FanControl.shared.sendAutoNow()
         if SelfTest.requested { exit(SelfTest.exitCode) }
     }
 }

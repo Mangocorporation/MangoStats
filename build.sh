@@ -37,6 +37,10 @@ mkdir -p "$HOME/Applications"
 rm -rf "$app"
 mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources"
 cp "$bin" "$app/Contents/MacOS/$name"
+# The fan helper (S-024): a launch daemon that runs from inside the bundle.
+cp "$scratch/$config/${name}Helper" "$app/Contents/MacOS/${name}Helper"
+mkdir -p "$app/Contents/Library/LaunchDaemons"
+cp "$here/LaunchDaemons/"*.plist "$app/Contents/Library/LaunchDaemons/"
 sed -e "s/__BUILD__/$(date +%Y%m%d%H%M)/" "$here/Info.plist.in" > "$app/Contents/Info.plist"
 # The icon: Icon/AppIcon.icon -> Resources/Assets.car + AppIcon.icns, rebuilt when it changed.
 if [[ -d "$here/Icon/AppIcon.icon" ]]; then
@@ -47,6 +51,9 @@ if [[ -d "$here/Icon/AppIcon.icon" ]]; then
   cp -X "$car" "$here/Resources/AppIcon.icns" "$app/Contents/Resources/"
 fi
 xattr -cr "$app"
+# Sign the helper first, with its own identifier, then the app around it.
+codesign --force --options runtime --identifier com.mangocorp.mangostats.helper --sign "$identity" \
+  "$app/Contents/MacOS/${name}Helper" 2>&1 | grep -v "replacing existing signature" || true
 codesign --force --sign "$identity" "$app" 2>&1 | grep -v "replacing existing signature" || true
 echo "installed $app (signed: ${identity})"
 

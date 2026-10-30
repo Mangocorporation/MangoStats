@@ -241,15 +241,7 @@ private struct FanCard: View {
             CardHeader(icon: .fan, title: "Fan", tint: Ink.gpu, pill: data.fanSpeed)
             HeroValue(value: data.fanRPM, unit: "RPM").padding(.top, Metric.iconGap)
             Spacer(minLength: 0)
-            HStack(spacing: Metric.segmentGap) {
-                Button("Auto") {}.buttonStyle(SegmentButtonStyle(selected: true))
-                Group {
-                    Button("Cool") {}.buttonStyle(SegmentButtonStyle())
-                    Button("Max") {}.buttonStyle(SegmentButtonStyle())
-                }
-                .disabled(true)
-                .help("Fan control is coming in a later version")
-            }
+            FanModePicker()
             Spacer(minLength: 0)
             CardFooter(leading: data.fanNote)
         }

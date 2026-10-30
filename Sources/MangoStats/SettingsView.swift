@@ -1,3 +1,5 @@
+import Combine
+import ServiceManagement
 import SwiftUI
 import MangoStatsKit
 
@@ -74,6 +76,7 @@ struct GeneralSettings: View {
                     .foregroundStyle(.secondary)
             }
         }
+        FanControlSection()
         Section {
             Picker("Refresh every", selection: $model.refreshInterval) {
                 ForEach(SampleSchedule.intervals, id: \.self) { seconds in
@@ -98,6 +101,39 @@ struct GeneralSettings: View {
             loginError = "Unable to change the login item: \(error.localizedDescription)"
         }
         openAtLogin = LoginItem.isEnabled
+    }
+}
+
+/// Fan control: install, approve, or remove the helper (S-024).
+struct FanControlSection: View {
+    private var fan = FanControl.shared
+    private let timer = Timer.publish(every: 2, tolerance: 0.5, on: .main, in: .common).autoconnect()
+
+    var body: some View {
+        Section("Fan control") {
+            Text(message).foregroundStyle(.secondary)
+            if let error = fan.error {
+                Text(error).foregroundStyle(.red)
+            }
+            HStack {
+                Spacer()
+                switch fan.state {
+                case .off: Button("Allow Fan Control…") { fan.enable() }
+                case .needsApproval: Button("Open Login Items…") { SMAppService.openSystemSettingsLoginItems() }
+                case .on: Button("Turn Off Fan Control") { fan.disable() }
+                }
+            }
+        }
+        // The user approves in System Settings; nothing calls back, so check while the tab is open.
+        .onReceive(timer) { _ in fan.refresh() }
+    }
+
+    private var message: String {
+        switch fan.state {
+        case .off: "Fan control is off. Cool and Max need a helper that runs as root."
+        case .needsApproval: "Allow MangoStats in System Settings > General > Login Items."
+        case .on: "The helper can set the fan. It returns to Auto when MangoStats quits."
+        }
     }
 }
 

@@ -129,10 +129,12 @@ public struct SensorReading: Sendable, Equatable {
 
 public struct FanReading: Sendable, Equatable {
     public var rpm: Double
+    public var min: Double
     public var max: Double
 
-    public init(rpm: Double, max: Double) {
+    public init(rpm: Double, min: Double = 0, max: Double) {
         self.rpm = rpm
+        self.min = min
         self.max = max
     }
 

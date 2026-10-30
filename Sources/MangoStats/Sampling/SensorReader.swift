@@ -1,6 +1,7 @@
 import Foundation
 import IOKit
 import MangoStatsKit
+import MangoStatsSMC
 
 /// GPU load, temperatures, power, and fans (S-015 to S-018). None of these
 /// need admin rights. Stateful: keeps the SMC connection, the sensor key
@@ -28,15 +29,13 @@ nonisolated final class SensorReader: @unchecked Sendable {
 
     /// Mean of the sensors that read a believable value; nil when none do.
     private func average(_ keys: [String]) -> Double? {
-        let values = keys.compactMap { smc?.value($0) }.filter { $0 > 1 && $0 < 130 }
-        return values.isEmpty ? nil : values.reduce(0, +) / Double(values.count)
+        smc?.cpuTemperature(keys: keys)
     }
 
     private func fans() -> [FanReading] {
-        guard let smc, let count = smc.value("FNum"), count > 0 else { return [] }
-        return (0..<Int(count)).compactMap { index in
-            guard let rpm = smc.value("F\(index)Ac") else { return nil }
-            return FanReading(rpm: max(rpm, 0), max: smc.value("F\(index)Mx") ?? 0)
+        guard let smc else { return [] }
+        return smc.fans().compactMap { fan in
+            smc.value("F\(fan.index)Ac").map { FanReading(rpm: max($0, 0), min: fan.min, max: fan.max) }
         }
     }
 
@@ -57,110 +56,6 @@ nonisolated final class SensorReader: @unchecked Sendable {
             service = IOIteratorNext(iterator)
         }
         return nil
-    }
-}
-
-// MARK: - SMC
-
-/// Reads keys from the System Management Controller through AppleSMC.
-nonisolated private final class SMC {
-    /// SMCKeyData_t from the kernel: 80 bytes. The padding after keyInfo
-    /// matters: Swift would otherwise pack `result` into its tail.
-    private struct KeyInfo {
-        var dataSize: UInt32 = 0
-        var dataType: UInt32 = 0
-        var dataAttributes: UInt8 = 0
-        var padding: (UInt8, UInt8, UInt8) = (0, 0, 0)
-    }
-
-    private struct Param {
-        var key: UInt32 = 0
-        var version: (UInt8, UInt8, UInt8, UInt8, UInt16) = (0, 0, 0, 0, 0)
-        var limits: (UInt16, UInt16, UInt32, UInt32, UInt32) = (0, 0, 0, 0, 0)
-        var info = KeyInfo()
-        var result: UInt8 = 0
-        var status: UInt8 = 0
-        var command: UInt8 = 0
-        var index: UInt32 = 0
-        var bytes: (UInt64, UInt64, UInt64, UInt64) = (0, 0, 0, 0)
-    }
-
-    private enum Command: UInt8 {
-        case read = 5, keyAtIndex = 8, keyInfo = 9
-    }
-
-    private var connection: io_connect_t = 0
-    private var infoCache: [UInt32: KeyInfo] = [:]
-
-    init?() {
-        let service = IOServiceGetMatchingService(kIOMainPortDefault, IOServiceMatching("AppleSMC"))
-        guard service != 0 else { return nil }
-        defer { IOObjectRelease(service) }
-        guard MemoryLayout<Param>.stride == 80,
-              IOServiceOpen(service, mach_task_self_, 0, &connection) == KERN_SUCCESS else { return nil }
-    }
-
-    deinit {
-        IOServiceClose(connection)
-    }
-
-    /// Every key whose name passes `include`, found once by walking the key list.
-    func keys(where include: (String) -> Bool) -> [String] {
-        guard let count = value("#KEY") else { return [] }
-        return (0..<UInt32(count)).compactMap { index in
-            var input = Param()
-            input.command = Command.keyAtIndex.rawValue
-            input.index = index
-            guard let output = call(&input) else { return nil }
-            let name = Self.name(output.key)
-            return include(name) ? name : nil
-        }
-    }
-
-    /// A key's value as a number, for the types fans and sensors use.
-    func value(_ key: String) -> Double? {
-        let code = Self.code(key)
-        let info: KeyInfo
-        if let cached = infoCache[code] {
-            info = cached
-        } else {
-            var input = Param()
-            input.key = code
-            input.command = Command.keyInfo.rawValue
-            guard let output = call(&input) else { return nil }
-            info = output.info
-            infoCache[code] = info
-        }
-        var input = Param()
-        input.key = code
-        input.info.dataSize = info.dataSize
-        input.command = Command.read.rawValue
-        guard let output = call(&input) else { return nil }
-        let bytes = withUnsafeBytes(of: output.bytes) { Array($0.prefix(Int(info.dataSize))) }
-        switch Self.name(info.dataType) {
-        case "flt " where bytes.count >= 4: return Double(bytes.withUnsafeBytes { $0.loadUnaligned(as: Float.self) })
-        case "ui8 " where bytes.count >= 1: return Double(bytes[0])
-        case "ui16" where bytes.count >= 2: return Double(UInt16(bytes[0]) << 8 | UInt16(bytes[1]))
-        case "ui32" where bytes.count >= 4: return Double(bytes.prefix(4).reduce(UInt32(0)) { $0 << 8 | UInt32($1) })
-        case "fpe2" where bytes.count >= 2: return Double(UInt16(bytes[0]) << 8 | UInt16(bytes[1])) / 4
-        case "sp78" where bytes.count >= 2: return Double(Int16(bitPattern: UInt16(bytes[0]) << 8 | UInt16(bytes[1]))) / 256
-        default: return nil
-        }
-    }
-
-    private func call(_ input: inout Param) -> Param? {
-        var output = Param()
-        var size = MemoryLayout<Param>.stride
-        let result = IOConnectCallStructMethod(connection, 2, &input, MemoryLayout<Param>.stride, &output, &size)
-        return result == kIOReturnSuccess && output.result == 0 ? output : nil
-    }
-
-    private static func code(_ key: String) -> UInt32 {
-        key.utf8.reduce(0) { $0 << 8 | UInt32($1) }
-    }
-
-    private static func name(_ code: UInt32) -> String {
-        String(decoding: [24, 16, 8, 0].map { UInt8((code >> $0) & 0xFF) }, as: UTF8.self)
     }
 }
 

@@ -317,13 +317,60 @@ Acceptance:
 Note: measured with tools/energy.sh (CPU time over 30 s, release build): closed 0.73 %, popover 1.37 %, window 1.87 %. Was 5.87 / 4.20 / 4.97 %: free space (CacheDelete) was 56 % of samples, now read every 30 s; the menu bar image re-renders only when its text changes.
 Status: done
 
+## M6 Fan control
+
+Probe on this M5 (as root): `F0md=1` + `F0Tg=4000` drove the fan to ~4,000 RPM after ~3 s; `F0md=0`
+returned it to macOS. No `Ftst` unlock key on M5. Writes need root: a launch daemon helper.
+
+### S-024 Allow fan control
+As the user, I turn on fan control once in Settings → General; macOS asks me to allow the MangoStats helper.
+Screens: settings-general
+Acceptance:
+- [self] The helper is a launch daemon in the app bundle (SMAppService.daemon); its state reads Off, Needs approval, or On.
+- [manual] "Allow Fan Control…" registers the helper and opens System Settings > General > Login Items when approval is needed.
+- [self] The helper accepts connections only from MangoStats signed by the same team.
+- [manual] "Turn Off Fan Control" unregisters the helper; the fan is back to Auto.
+UX:
+- Flow: Settings → General → Fan control section → "Allow Fan Control…" → System Settings opens on Login Items → switch on MangoStats → back in MangoStats the state reads "On" within 2 s
+- Surface: Settings section (a place people come back to); state rechecked every 2 s while the tab is open
+- States: Off "Fan control is off. Cool and Max need a helper that runs as root."; Needs approval "Allow MangoStats in System Settings > General > Login Items."; On "The helper can set the fan. It returns to Auto when MangoStats quits."; error inline with the reason
+- Words: "Fan control" section; buttons "Allow Fan Control…", "Open Login Items…", "Turn Off Fan Control"
+- Access: buttons reachable by Tab; VoiceOver reads the state line
+Status: todo
+
+### S-025 Pick Auto, Cool, or Max
+As the user, I click Cool or Max on the Fan card (window or popover) and the fan spins up; Auto gives control back to macOS.
+Screens: status-window.png, menubar-popover.png
+Depends: S-024
+Acceptance:
+- [unit] Cool targets 60 % of the fan's range (min + 0.6 × (max − min)), Max targets the fan's max; never below min.
+- [self] Picking Cool writes F0md = 1 and F0Tg through the helper; Auto writes F0md = 0.
+- [snap] The selected segment shows; the note reads "Managed by macOS", "Cool · 4,857 RPM target", or "Max · 6,550 RPM target".
+- [manual] Without the helper, Cool and Max are disabled with the tooltip "Allow fan control in Settings > General".
+UX:
+- Flow: click Cool or Max → segment selects at once → fan reaches target in ~3 s (RPM climbs on the card) → click Auto to give control back
+- Surface: inline segments on the Fan card (changes one value on screen)
+- States: helper missing → Cool/Max disabled with tooltip; helper error → note "Unable to set the fan: <reason>", selection returns to Auto
+- Words: "Auto", "Cool", "Max"; tooltips "Let macOS control the fan", "Run the fan at 60 % for cooler temperatures", "Run the fan at full speed"
+- Access: segments are buttons with the selected trait; VoiceOver "Fan mode Cool, selected"
+Status: todo
+
+### S-026 The fan never stays forced
+As the user, I trust that a forced fan goes back to Auto when MangoStats isn't watching, and speeds up if the Mac gets hot.
+Depends: S-025
+Acceptance:
+- [unit] The helper's policy returns Auto when the app hasn't pinged for 15 s, on helper start, and when the connection drops.
+- [unit] In Cool, a CPU temperature of 90 °C or more raises the target to Max until it drops below 80 °C.
+- [self] Quitting MangoStats sets Auto before it exits.
+- [manual] Force quitting MangoStats returns the fan to Auto within 15 s.
+- [self] MangoStats always starts in Auto.
+Status: todo
+
 ## Dropped
 - Clean, Apps, Optimize, Analyze tabs: another app's job (MangoCleaner).
 - "Cleaned / Uninstalled / Optimized" counters: belong to cleaning, not stats.
 - The reference app's upgrade button: vendor-only.
-- Fan control (Cool/Max): needs a privileged SMC helper; read-only in v1 (S-018).
 
 ## Later
-- Fan control with a privileged helper.
 - Stats history across days, and alerts (e.g. memory pressure critical).
 - iCloud sync of settings.

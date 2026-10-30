@@ -244,15 +244,7 @@ private struct PopFanCard: View {
             HeroValue(value: data.fanRPM, unit: "RPM", role: .popHero).padding(.top, Metric.iconGap)
             Text(data.fanNote).kitType(.footer).foregroundStyle(Ink.secondary)
             Spacer(minLength: 0)
-            HStack(spacing: Metric.compactSegmentGap) {
-                Button("Auto") {}.buttonStyle(SegmentButtonStyle(selected: true, compact: true))
-                Group {
-                    Button("Cool") {}.buttonStyle(SegmentButtonStyle(compact: true))
-                    Button("Max") {}.buttonStyle(SegmentButtonStyle(compact: true))
-                }
-                .disabled(true)
-                .help("Fan control is coming in a later version")
-            }
+            FanModePicker(compact: true)
         }
     }
 }

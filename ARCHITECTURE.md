@@ -3,10 +3,17 @@
 ## Targets
 
 ```text
-MangoStatsKit   pure logic and plain values, no SwiftUI, no I/O. Tested in Tests/MangoStatsKitTests.
+MangoStatsKit     pure logic and plain values, no SwiftUI, no I/O (incl. FanPolicy). Tested.
    ^
-MangoStats      the app: scenes, views, design kit, system readers, sampler.
+MangoStatsSMC     SMC read/write and the fan helper's XPC protocol.
+   ^          ^
+MangoStats    MangoStatsHelper   app / root launch daemon that sets the fan (bundled by build.sh,
+                                 registered with SMAppService.daemon, LaunchDaemons/*.plist)
 ```
+
+Fan control: the app sends the wanted mode every sample over XPC; the helper applies FanPolicy
+(targets, 15 s timeout, hot override) and returns to Auto on start, SIGTERM, and dropped connections.
+The helper accepts only callers with identifier com.mangocorp.mangostats signed by its own team.
 
 Dependencies point one way: the app imports the Kit, never the other way.
 
