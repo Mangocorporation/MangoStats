@@ -48,3 +48,9 @@ Sampler (app, @MainActor): every 2 s, reads off the main thread,     AppModel.st
 - `DesignKit/` tokens, icons, parts, gallery (design/KIT.md).
 - `PopoverView.swift`, `StatusView.swift` (Status | History tabs), `HistoryView.swift`, `SettingsView.swift`.
 - `Models.swift` `AppModel` (menu bar layout, status, open surfaces) and `Store` (settings domain).
+
+## Releases
+
+Sparkle 2.10.1 (embedded in Contents/Frameworks, rpath @executable_path/../Frameworks). Feed
+`site/appcast.xml` on GitHub Pages (`.github/workflows/pages.yml`), zips in GitHub releases.
+`tools/release.sh` then `tools/publish.sh`; the whole flow is in docs/RELEASE.md.

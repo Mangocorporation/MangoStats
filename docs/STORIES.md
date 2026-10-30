@@ -491,7 +491,8 @@ As the developer, I run tools/release.sh and tools/publish.sh to ship a notarize
 Acceptance:
 - [self] tools/release.sh --check: Developer ID signature, hardened runtime on the app and the helper, the helper accepts the build.
 - [manual] tools/release.sh notarizes and staples, signs the zip, adds it to site/appcast.xml; tools/publish.sh creates the GitHub release, then pushes the feed.
-Status: todo
+Note: 1.0 released 2026-10-30: notarized (Accepted), GitHub release v1.0, feed live; the downloaded zip's EdDSA signature verifies.
+Status: done
 
 ## Dropped
 - Clean, Apps, Optimize, Analyze tabs: another app's job (MangoCleaner).
