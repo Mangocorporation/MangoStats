@@ -35,3 +35,12 @@ Cause: on macOS every ICMP datagram socket can receive every echo reply; with pi
 parallel, each socket took the first reply (the router's) as its own.
 Fix: accept a reply only from the target's address with our echo identifier (recvfrom + id check).
 Rule: When probes run in parallel, match each answer to its question (source and id), never "first reply wins".
+
+## 2026-10-30 build.sh said "binary is older" for code that had compiled
+Symptom: after a history rewrite or a comment-only edit, build.sh failed with "binary is older than
+<file>", and the release script stopped, while `swift build` said "Build complete".
+Cause: the guard compared file dates, but SwiftPM's build system tracks contents: a touched file
+with no new work leaves the binary's date alone. Touching and rebuilding didn't help.
+Fix: judge the build by swift build's exit status (the guard's real purpose); `status` is read-only in
+zsh, so the variable is build_status.
+Rule: Check a build tool's exit status, not file dates; never pipe the command you need the status of.
