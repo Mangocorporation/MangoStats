@@ -195,6 +195,7 @@ nonisolated enum Metric {
     static let colPower: CGFloat = 136
     static let colPID: CGFloat = 144
     static let colMore: CGFloat = 42
+    static let searchWidth: CGFloat = 220
 }
 
 enum Motion {

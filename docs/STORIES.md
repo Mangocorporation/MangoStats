@@ -198,7 +198,7 @@ UX:
 - States: default sort Memory, largest first; the order is kept while the window stays open
 - Words: tooltips "Sort by memory", "Sort by % CPU", "Sort by power", "Sort by PID", "Sort by name"
 - Access: headers are buttons; VoiceOver "Sort by memory, sorted descending"
-Status: todo
+Status: done
 
 ### S-013 Search processes
 As the user, I click the magnifier (or press Command-F) and type to filter processes by name or PID.
@@ -213,7 +213,7 @@ UX:
 - States: no match -> one row "No processes match "<text>"" ; the count in the header shows matches ("NAME (3 of 156)")
 - Words: placeholder "Name or PID"; magnifier tooltip "Filter processes by name or PID (⌘F)"
 - Access: the field gets focus on ⌘F; Escape clears; VoiceOver "Search processes"
-Status: todo
+Status: done
 
 ### S-014 Quit a process from its row menu
 As the user, I click `…` on a process and choose Quit, Force Quit, Show in Activity Monitor, or Copy PID.

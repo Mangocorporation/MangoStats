@@ -2,32 +2,6 @@ import AppKit
 import SwiftUI
 import MangoStatsKit
 
-/// The Status window's process table header.
-struct ProcessTableHeader: View {
-    let count: Int
-    var onSearch: () -> Void = {}
-
-    var body: some View {
-        HStack(spacing: 0) {
-            Text("Name (\(count))")
-                .padding(.leading, Metric.hotMarker.width + Metric.iconGap)
-                .frame(maxWidth: .infinity, alignment: .leading)
-            Text("Mem").frame(width: Metric.colMemory, alignment: .trailing)
-            Spacer().frame(width: Metric.colMemoryGap + Metric.miniBar.width)
-            Text("% CPU").fixedSize().frame(width: Metric.colCPU, alignment: .trailing)
-            Text("Pwr").frame(width: Metric.colPower, alignment: .trailing)
-            Text("PID").frame(width: Metric.colPID, alignment: .trailing)
-            Button("Search Processes", systemImage: KitIcon.search.symbol, action: onSearch)
-                .buttonStyle(KitIconButtonStyle())
-                .help("Filter processes by name or PID (⌘F)")
-                .frame(width: Metric.colMore)
-        }
-        .kitType(.columnHeader)
-        .foregroundStyle(Ink.tertiary)
-        .frame(height: Metric.tableHeaderHeight)
-    }
-}
-
 /// One process in the Status window table.
 struct ProcessRow: View {
     let process: ProcessRowData

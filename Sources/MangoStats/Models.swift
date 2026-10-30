@@ -36,6 +36,9 @@ final class AppModel {
     /// What each stat shows in the menu bar, like "15%". Missing stats show "--".
     var menuValues: [MenuBarStat: String] = [:]
     /// Processes are read only while someone looks at them (S-023).
+    /// Process table sort and search (S-012, S-013). Reset when the app starts.
+    var processSort = ProcessSort.default
+    var processQuery = ""
     var popoverOpen = false
     var windowOpen = false
     var detailVisible: Bool { popoverOpen || windowOpen }

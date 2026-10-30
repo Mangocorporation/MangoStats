@@ -45,7 +45,7 @@ struct StatusView: View {
                 NetworkCard(data: data)
                 FanCard(data: data)
             }
-            ProcessTable(data: data)
+            ProcessTableView(data: data)
         }
         .padding(.horizontal, Metric.windowMargin)
         .padding(.top, Metric.windowTop)
@@ -253,41 +253,6 @@ private struct FanCard: View {
             Spacer(minLength: 0)
             CardFooter(leading: data.fanNote)
         }
-    }
-}
-
-// MARK: - Process table
-
-private struct ProcessTable: View {
-    let data: StatusData
-
-    var body: some View {
-        VStack(spacing: 0) {
-            ProcessTableHeader(count: data.processCount)
-                .padding(.trailing, Metric.iconGap)
-            ScrollView {
-                LazyVStack(spacing: 0) {
-                    if data.processes.isEmpty {
-                        Text("Reading processes…")
-                            .kitType(.footer)
-                            .foregroundStyle(Ink.secondary)
-                            .frame(maxWidth: .infinity, minHeight: Metric.rowHeight, alignment: .leading)
-                    }
-                    ForEach(data.processes, id: \.self) { process in
-                        ProcessRow(process: process)
-                            .padding(.trailing, Metric.iconGap)
-                    }
-                }
-            }
-            .scrollIndicators(.automatic)
-        }
-        .padding(.leading, Metric.tableInset)
-        .padding(.top, Metric.iconGap)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .background(Ink.cardFill, in: RoundedRectangle(cornerRadius: Metric.cardRadius, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: Metric.cardRadius, style: .continuous)
-            .strokeBorder(Ink.cardStroke, lineWidth: Metric.cardStroke))
-        .clipShape(RoundedRectangle(cornerRadius: Metric.cardRadius, style: .continuous))
     }
 }
 

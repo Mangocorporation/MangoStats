@@ -144,3 +144,46 @@ func stableOrder() {
     let far = ProcessGrouping.stableOrder([group(2, 2_000_000_000), group(1, 1_000_000_000)], previous: [1, 2])
     #expect(far.map(\.pid) == [2, 1])
 }
+
+private func row(_ pid: Int32, _ name: String, memory: Int64, cpu: Double, watts: Double?) -> ProcessRowData {
+    ProcessRowData(id: pid, name: name, memory: "", cpu: cpu, cpuText: "", power: "", memoryBytes: memory, watts: watts)
+}
+
+@Test("Clicking a header sorts by it; clicking again flips")
+func sortSelect() {
+    var sort = ProcessSort.default
+    sort.select(.cpu)
+    #expect(sort == ProcessSort(column: .cpu, descending: true))
+    sort.select(.cpu)
+    #expect(sort.descending == false)
+    sort.select(.name)
+    #expect(sort == ProcessSort(column: .name, descending: false))
+}
+
+@Test("Sort by every column, both ways")
+func sortColumns() {
+    let rows = [row(3, "safari", memory: 100, cpu: 5, watts: nil),
+                row(1, "Code", memory: 300, cpu: 1, watts: 0.5),
+                row(2, "Finder", memory: 200, cpu: 9, watts: 2)]
+    func ids(_ column: ProcessColumn, _ descending: Bool) -> [Int32] {
+        ProcessTable.sort(rows, by: ProcessSort(column: column, descending: descending)).map(\.id)
+    }
+    #expect(ids(.name, false) == [1, 2, 3])
+    #expect(ids(.name, true) == [3, 2, 1])
+    #expect(ids(.memory, false) == [3, 2, 1])
+    #expect(ids(.cpu, true) == [2, 3, 1])
+    #expect(ids(.power, true) == [2, 1, 3])
+    #expect(ids(.pid, false) == [1, 2, 3])
+    // The default keeps the sampler's stable order untouched.
+    #expect(ProcessTable.sort(rows, by: .default).map(\.id) == [3, 1, 2])
+}
+
+@Test("Search matches names in any case, or an exact PID")
+func search() {
+    let rows = [row(589, "WindowServer", memory: 0, cpu: 0, watts: nil),
+                row(1589, "Safari", memory: 0, cpu: 0, watts: nil)]
+    #expect(ProcessTable.filter(rows, query: "window").map(\.id) == [589])
+    #expect(ProcessTable.filter(rows, query: "589").map(\.id) == [589])
+    #expect(ProcessTable.filter(rows, query: "  ").count == 2)
+    #expect(ProcessTable.filter(rows, query: "zzz").isEmpty)
+}

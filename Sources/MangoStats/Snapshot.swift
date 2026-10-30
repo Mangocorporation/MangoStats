@@ -1,6 +1,7 @@
 import AppKit
 import IOKit.pwr_mgt
 import SwiftUI
+import MangoStatsKit
 
 /// Screenshot mode for agents.
 ///   APP_STORE=/tmp/test.store APP_SNAPSHOT=/tmp/shots ~/Applications/MangoStats.app/Contents/MacOS/MangoStats
@@ -54,6 +55,21 @@ enum Snapshot {
                     try? await Task.sleep(for: .seconds(0.8))
                     capture(to: "\(dir)/\(page.rawValue)-\(mode).png", window: main)
                 }
+            }
+            // Process table states (S-012, S-013), dark only: the window is always dark.
+            if only == nil || only?.contains("table") == true {
+                NSApp.appearance = NSAppearance(named: .darkAqua)
+                model.processSort = ProcessSort(column: .cpu, descending: true)
+                try? await Task.sleep(for: .seconds(0.8))
+                capture(to: "\(dir)/status-sorted-dark.png", window: main)
+                model.processSort = .default
+                model.processQuery = "chrome"
+                try? await Task.sleep(for: .seconds(0.8))
+                capture(to: "\(dir)/status-search-dark.png", window: main)
+                model.processQuery = "zzz"
+                try? await Task.sleep(for: .seconds(0.8))
+                capture(to: "\(dir)/status-nomatch-dark.png", window: main)
+                model.processQuery = ""
             }
             if only == nil || only?.contains("settings") == true {
                 NSApp.activate(); openSettings()

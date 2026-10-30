@@ -5,7 +5,7 @@ import MangoStatsKit
 /// whole set can change here. SF Symbols, regular weight (design/KIT.md, Icons).
 enum KitIcon: String, CaseIterable {
     case cpu, gpu, memory, disk, network, fan, battery, health, bolt, laptop, waves
-    case camera, mic, awake, display, search, more, window, gear, power, chart, thermometer
+    case camera, mic, awake, display, search, more, window, gear, power, chart, thermometer, sortUp, sortDown, clear
 
     var symbol: String {
         switch self {
@@ -31,6 +31,9 @@ enum KitIcon: String, CaseIterable {
         case .power: "power"
         case .chart: "chart.bar.xaxis"
         case .thermometer: "thermometer.medium"
+        case .sortUp: "chevron.up"
+        case .sortDown: "chevron.down"
+        case .clear: "xmark.circle.fill"
         }
     }
 

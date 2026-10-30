@@ -132,7 +132,7 @@ public struct StatusBuilder: Sendable {
                 ProcessRowData(id: group.pid, name: group.name, memory: Format.bytes(group.memory),
                                cpu: group.cpu, cpuText: Format.number(group.cpu, digits: 1),
                                power: group.power.map { Format.number($0, digits: 1) } ?? "--",
-                               bundlePath: group.bundlePath)
+                               bundlePath: group.bundlePath, memoryBytes: group.memory, watts: group.power)
             }
             if let drain = groups.max(by: { $0.cpu < $1.cpu }), drain.cpu > 1 {
                 status.batteryDrain = "Top drain now \(drain.name)"

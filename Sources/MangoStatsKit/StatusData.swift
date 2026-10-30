@@ -74,9 +74,14 @@ public struct ProcessRowData: Identifiable, Hashable, Sendable {
     public let cpuText: String
     public let power: String
     public var bundlePath: String?
+    /// Raw values for sorting (S-012).
+    public var memoryBytes: Int64
+    public var watts: Double?
+    /// False for processes of other users: Quit is unavailable (S-014).
+    public var ownedByUser: Bool
 
     public init(id: Int32, name: String, memory: String, cpu: Double, cpuText: String, power: String,
-                bundlePath: String? = nil) {
+                bundlePath: String? = nil, memoryBytes: Int64 = 0, watts: Double? = nil, ownedByUser: Bool = true) {
         self.id = id
         self.name = name
         self.memory = memory
@@ -84,6 +89,9 @@ public struct ProcessRowData: Identifiable, Hashable, Sendable {
         self.cpuText = cpuText
         self.power = power
         self.bundlePath = bundlePath
+        self.memoryBytes = memoryBytes
+        self.watts = watts
+        self.ownedByUser = ownedByUser
     }
 
     /// Over 20 % CPU the row is marked hot (design/KIT.md, Process row).

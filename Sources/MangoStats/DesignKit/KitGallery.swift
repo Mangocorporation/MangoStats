@@ -90,7 +90,6 @@ struct KitGallery: View {
                 }
                 section("Process rows: rest, hover, hot, long name") {
                     VStack(spacing: 0) {
-                        ProcessTableHeader(count: 156)
                         ProcessRow(process: data.processes[1])
                         ProcessRow(process: data.processes[4]).environment(\.kitForcedState, .hover)
                         ProcessRow(process: data.processes[0])
