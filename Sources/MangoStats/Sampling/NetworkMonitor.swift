@@ -92,6 +92,11 @@ final class NetworkMonitor {
 
     func start() {
         guard !running else { return }
+        if HistorySample.enabled {
+            // Snapshots show a made-up home network, never the real one (README screenshots are public).
+            loadSample()
+            return
+        }
         running = true
         locationAllowed = location.allowed
         Task { speedResults = await HistoryStore.shared.speedTests() }
@@ -260,6 +265,33 @@ final class NetworkMonitor {
 
     func cancelSpeedTest() {
         speedProcess?.terminate()
+    }
+
+    /// The snapshot's network: invented addresses and devices.
+    private func loadSample() {
+        running = true
+        gateway = "192.168.1.1"
+        interface = "en0"
+        router = LatencyStats(samples: [4.1, 5.2, 3.9, 6.0, 4.4, 5.1, 4.6, 4.8])
+        routerMAC = "a0:b1:c2:d3:e4:f5"
+        routerVendor = "Example Networks"
+        upnpChecked = true
+        leaseSeconds = 86_400
+        sites[0].stats = LatencyStats(samples: [14, 15, 13, 16, 14, 15])
+        sites[1].stats = LatencyStats(samples: [16, 17, 15, 18, 16, 17])
+        sites[2].stats = LatencyStats(samples: [19, 21, 18, 20, 19, 22])
+        hops = [(1, "192.168.1.1", 4.8), (2, "100.64.0.1", 9.2), (3, "203.0.113.1", 11.5), (4, "198.51.100.7", 13.1)]
+        dns = [(server: "192.168.1.1", ms: 9.4), (server: "1.1.1.1", ms: 15.2)]
+        wifi = WiFiReading(interface: "en0", connected: true, ssid: "Home", rssi: -58, noise: -95, rate: 866,
+                           channel: 44, band: 2, width: 3, phyMode: 6, security: 4) // grid: ok CoreWLAN raw values
+        devices = [
+            NetworkDevice(ip: "192.168.1.1", mac: "a0:b1:c2:d3:e4:f5", vendor: "Example Networks", isRouter: true),
+            NetworkDevice(ip: "192.168.1.20", mac: "3c:22:fb:10:20:30", vendor: "Apple, Inc.", name: "Living Room TV"),
+            NetworkDevice(ip: "192.168.1.31", mac: "00:1b:a9:44:55:66", vendor: "Brother Industries, Ltd.", name: "Office Printer"),
+            NetworkDevice(ip: "192.168.1.42", mac: "ba:11:22:33:44:55", vendor: "Private address"),
+        ]
+        speedResults = [NetworkParse.SpeedResult(date: .now.addingTimeInterval(-3_600), download: 412, upload: 38.5,
+                                                 responsiveness: 1_450, idleLatency: 18)]
     }
 
     // MARK: Location (S-041)

@@ -101,7 +101,9 @@ private struct PathDiagram: View {
     var body: some View {
         let wired = monitor.wifi?.connected != true
         HStack(alignment: .top, spacing: 0) {
-            node("This Mac", icon: .window, detail: Host.current().localizedName ?? "", health: .good)
+            // Snapshots are public: never the Mac's own name there.
+            node("This Mac", icon: .window, detail: HistorySample.enabled ? "MacBook Pro" : Host.current().localizedName ?? "",
+                 health: .good)
             link(health[.wifi] ?? .unknown)
             node(wired ? "Ethernet" : "Wi-Fi", icon: .network,
                  detail: monitor.wifi.map { $0.connected ? "\(WiFiWords.signal(snr: $0.snr)) · \(Int($0.snr)) dB SNR" : "Not connected" } ?? "Cable",

@@ -88,6 +88,10 @@ MangoStats reads them first:
   responsiveness (RPM), only when you click.
 - **Devices** on your network, with makers, named when they announce themselves.
 
+<p align="center">
+  <img src="docs/images/network.png" width="800" alt="The Network tab: All good, the path from this Mac through Wi-Fi, router, and ISP to the internet with latency on each step, and the router, Wi-Fi, and speed test cards">
+</p>
+
 ### On its own
 - **Alerts** (off until you turn them on) when memory pressure turns
   critical, the CPU runs hot or busy, disk space or the battery runs low, or
