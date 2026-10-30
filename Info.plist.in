@@ -13,6 +13,10 @@
 <key>LSMinimumSystemVersion</key><string>26.0</string>
 <key>LSApplicationCategoryType</key><string>public.app-category.utilities</string>
 <key>LSUIElement</key><true/>
+<key>NSLocalNetworkUsageDescription</key><string>MangoStats pings your router, times your DNS, and lists devices on your network for the Network tab. Nothing leaves your Mac.</string>
+<key>NSBonjourServices</key><array><string>_airplay._tcp</string><string>_raop._tcp</string><string>_ipp._tcp</string><string>_printer._tcp</string><string>_googlecast._tcp</string><string>_companion-link._tcp</string><string>_smb._tcp</string><string>_hap._tcp</string><string>_spotify-connect._tcp</string><string>_device-info._tcp</string><string>_homekit._tcp</string><string>_ssh._tcp</string></array>
+<key>NSLocationUsageDescription</key><string>macOS shares your Wi-Fi network's name only with apps allowed to use Location. MangoStats shows the name in the Network tab and doesn't use your location.</string>
+<key>NSLocationWhenInUseUsageDescription</key><string>macOS shares your Wi-Fi network's name only with apps allowed to use Location. MangoStats shows the name in the Network tab and doesn't use your location.</string>
 <key>SUFeedURL</key><string>https://mangocorporation.github.io/MangoStats/appcast.xml</string>
 <key>SUPublicEDKey</key><string>hJLpBU/XtiHsk8YK6x12ClfEUVu2UEcSFqXIviK5yQw=</string>
 <key>NSHighResolutionCapable</key><true/>

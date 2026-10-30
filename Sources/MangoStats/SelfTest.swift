@@ -133,6 +133,17 @@ enum SelfTest {
             model.alerts = AlertSettings()
             model.popoverOpen = true
 
+            // S-039: pings without root, each to its own target.
+            let pings = await Task.detached { () -> (Double?, Double?) in
+                let route = NetworkProbe.defaultRoute()
+                async let router = route.flatMap { NetworkProbe.ping($0.gateway) }
+                async let internet = NetworkProbe.ping("1.1.1.1")
+                return (await router, await internet)
+            }.value
+            check("the router answers a ping without root", pings.0 != nil, "\(pings.0 ?? -1) ms")
+            check("the internet answers a ping without root", pings.1 != nil, "\(pings.1 ?? -1) ms")
+            print("INFO ping router \(pings.0.map { String(format: "%.1f", $0) } ?? "-") ms · internet \(pings.1.map { String(format: "%.1f", $0) } ?? "-") ms")
+
             // S-014: Quit ends a process of this user.
             let child = Process()
             child.executableURL = URL(fileURLWithPath: "/bin/sleep")

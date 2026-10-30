@@ -30,6 +30,11 @@ nonisolated final class HistoryStore: @unchecked Sendable {
                 time INTEGER PRIMARY KEY, cpu REAL NOT NULL, memory REAL NOT NULL, gpu REAL,
                 cpu_temp REAL, gpu_temp REAL, download REAL NOT NULL, upload REAL NOT NULL,
                 battery REAL, cpu_watts REAL, gpu_watts REAL);
+            CREATE TABLE IF NOT EXISTS speed_tests (
+                time INTEGER PRIMARY KEY, download REAL NOT NULL, upload REAL NOT NULL,
+                responsiveness REAL, idle_latency REAL);
+            CREATE TABLE IF NOT EXISTS outages (
+                start INTEGER PRIMARY KEY, end INTEGER NOT NULL, what TEXT NOT NULL);
             """)
         }
     }
@@ -85,9 +90,78 @@ nonisolated final class HistoryStore: @unchecked Sendable {
         }
     }
 
+    /// A speed test result (S-043).
+    func addSpeedTest(_ result: NetworkParse.SpeedResult) {
+        queue.async {
+            let sql = "INSERT OR REPLACE INTO speed_tests (time, download, upload, responsiveness, idle_latency) VALUES (?, ?, ?, ?, ?)"
+            guard let statement = self.prepare(sql) else { return }
+            defer { sqlite3_finalize(statement) }
+            sqlite3_bind_int64(statement, 1, Int64(result.date.timeIntervalSince1970))
+            sqlite3_bind_double(statement, 2, result.download)
+            sqlite3_bind_double(statement, 3, result.upload)
+            if let rpm = result.responsiveness { sqlite3_bind_double(statement, 4, rpm) } else { sqlite3_bind_null(statement, 4) }
+            if let idle = result.idleLatency { sqlite3_bind_double(statement, 5, idle) } else { sqlite3_bind_null(statement, 5) }
+            sqlite3_step(statement)
+        }
+    }
+
+    /// Speed tests, newest first.
+    func speedTests(limit: Int = 20) async -> [NetworkParse.SpeedResult] {
+        await withCheckedContinuation { continuation in
+            queue.async {
+                let sql = "SELECT time, download, upload, responsiveness, idle_latency FROM speed_tests ORDER BY time DESC LIMIT ?"
+                guard let statement = self.prepare(sql) else { return continuation.resume(returning: []) }
+                defer { sqlite3_finalize(statement) }
+                sqlite3_bind_int(statement, 1, Int32(limit))
+                var rows: [NetworkParse.SpeedResult] = []
+                while sqlite3_step(statement) == SQLITE_ROW {
+                    func number(_ column: Int32) -> Double? {
+                        sqlite3_column_type(statement, column) == SQLITE_NULL ? nil : sqlite3_column_double(statement, column)
+                    }
+                    rows.append(NetworkParse.SpeedResult(
+                        date: Date(timeIntervalSince1970: Double(sqlite3_column_int64(statement, 0))),
+                        download: number(1) ?? 0, upload: number(2) ?? 0, responsiveness: number(3), idleLatency: number(4)))
+                }
+                continuation.resume(returning: rows)
+            }
+        }
+    }
+
+    /// An outage that ended (S-042).
+    func addOutage(start: Date, end: Date, what: String) {
+        queue.async {
+            guard let statement = self.prepare("INSERT OR REPLACE INTO outages (start, end, what) VALUES (?, ?, ?)") else { return }
+            defer { sqlite3_finalize(statement) }
+            sqlite3_bind_int64(statement, 1, Int64(start.timeIntervalSince1970))
+            sqlite3_bind_int64(statement, 2, Int64(end.timeIntervalSince1970))
+            sqlite3_bind_text(statement, 3, what, -1, unsafeBitCast(-1, to: sqlite3_destructor_type.self))
+            sqlite3_step(statement)
+        }
+    }
+
+    /// Outages from `start` on, newest first.
+    func outages(since start: Date) async -> [(start: Date, end: Date, what: String)] {
+        await withCheckedContinuation { continuation in
+            queue.async {
+                guard let statement = self.prepare("SELECT start, end, what FROM outages WHERE start >= ? ORDER BY start DESC")
+                else { return continuation.resume(returning: []) }
+                defer { sqlite3_finalize(statement) }
+                sqlite3_bind_int64(statement, 1, Int64(start.timeIntervalSince1970))
+                var rows: [(start: Date, end: Date, what: String)] = []
+                while sqlite3_step(statement) == SQLITE_ROW {
+                    rows.append((Date(timeIntervalSince1970: Double(sqlite3_column_int64(statement, 0))),
+                                 Date(timeIntervalSince1970: Double(sqlite3_column_int64(statement, 1))),
+                                 String(cString: sqlite3_column_text(statement, 2))))
+                }
+                continuation.resume(returning: rows)
+            }
+        }
+    }
+
     /// Deletes minutes before `cutoff` (S-030).
     func prune(before cutoff: Date) {
         queue.async {
+            self.exec("DELETE FROM speed_tests WHERE time < \(Int64(cutoff.timeIntervalSince1970)); DELETE FROM outages WHERE start < \(Int64(cutoff.timeIntervalSince1970));")
             guard let statement = self.prepare("DELETE FROM minutes WHERE time < ?") else { return }
             defer { sqlite3_finalize(statement) }
             sqlite3_bind_int64(statement, 1, Int64(cutoff.timeIntervalSince1970))
@@ -98,7 +172,7 @@ nonisolated final class HistoryStore: @unchecked Sendable {
     func clear() async {
         await withCheckedContinuation { continuation in
             queue.async {
-                self.exec("DELETE FROM minutes; VACUUM;")
+                self.exec("DELETE FROM minutes; DELETE FROM speed_tests; DELETE FROM outages; VACUUM;")
                 continuation.resume()
             }
         }

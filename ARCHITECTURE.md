@@ -37,6 +37,11 @@ Sampler (app, @MainActor): every 2 s, reads off the main thread,     AppModel.st
 - History (M7): `StatusUpdate.point` -> `MinuteAggregator` (Kit) in the Sampler -> `HistoryStore`
   (SQLite, own serial queue, `history.sqlite` in Application Support; `<APP_STORE>-history.sqlite` in
   test runs). `HistoryView` reads it and downsamples with `HistoryRange` (Kit).
+- Network tab (M11): `NetworkMonitor` (app, @MainActor) runs only while the tab is open: pings every
+  2 s (ICMP datagram sockets, each reply matched to its target), and every minute the route
+  (`traceroute`), DNS timing (raw UDP queries), `arp`, the DHCP lease, UPnP, plus Bonjour browsing.
+  `NetworkVerdict`, `LatencyStats`, `WiFiWords`, the parsers, and `VendorDirectory` (Resources/oui.txt,
+  `tools/update-oui.sh`) are in the Kit and tested. Speed tests run Apple's `networkQuality -c`.
 - Alerts (M8): the Sampler builds an `AlertInput` per sample; `AlertEngine` (Kit, tested) decides;
   `Notifier` posts through UNUserNotificationCenter and opens the Status window on click.
 - Snapshot runs skip the sampler and show `StatusData.sample` (app target), unless `APP_LIVE=1`.

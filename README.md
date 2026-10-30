@@ -74,6 +74,20 @@ MangoStats reads them first:
   <img src="docs/images/history.png" width="800" alt="The History tab: CPU, GPU, Memory, and Temperature charts for the last day, with average and peak">
 </p>
 
+### The Network tab
+- **Where the problem is, in plain words:** *"Your Wi-Fi is the weak link"*,
+  *"Your ISP is slow right now"*, or *"All good"*, above a path from **This
+  Mac → Wi-Fi → Router → ISP → Internet** with latency on each step.
+- **Router:** address, maker, latency, jitter, loss, DHCP lease, whether it's
+  your DNS, and its model when it shares one over UPnP.
+- **Wi-Fi:** signal, noise, and SNR rated Excellent to Poor, link rate, band,
+  channel and width, Wi-Fi standard, security, and the network's name.
+- **Internet and DNS:** latency, jitter, and loss to Cloudflare, Google, and
+  Apple; how fast each DNS server answers; outages while you watch.
+- **Speed test** with Apple's own `networkQuality`: download, upload, and
+  responsiveness (RPM), only when you click.
+- **Devices** on your network, with makers, named when they announce themselves.
+
 ### On its own
 - **Alerts** (off until you turn them on) when memory pressure turns
   critical, the CPU runs hot or busy, disk space or the battery runs low, or
@@ -109,6 +123,8 @@ seconds), how long history is kept (7, 30, or 90 days), and updates.
 | Stats, processes, temperatures, the fan's speed | Nothing | Always |
 | Alerts | Permission to send notifications | When you turn on *Show alerts* |
 | Fan control (Cool, Max) | Approve the MangoStats helper in Login Items | When you click *Allow Fan Control…* |
+| Network tab: router, DNS, devices | Local Network | When you first open the Network tab |
+| Network tab: the Wi-Fi network's name | Location (macOS shares the name only with apps allowed to use it; MangoStats never uses your location) | When you click *Show Name…* |
 
 The fan helper is a small launch daemon inside the app that runs as root,
 because only root may set the fan. It does one thing: write the fan's mode
@@ -182,8 +198,11 @@ MangoStats has no analytics, no accounts, and no servers. It reads system
 statistics and the names and resource use of running processes, on your Mac
 only. History stays in
 `~/Library/Application Support/MangoStats/history.sqlite`. It uses the
-network for two things: a connection to `1.1.1.1:443` every 30 seconds to
-measure latency (it connects and closes, sending nothing), and, once a day,
+network for a few things: a connection to `1.1.1.1:443` every 30 seconds to
+measure latency (it connects and closes, sending nothing); while the Network
+tab is open, pings to your router, Cloudflare (1.1.1.1), Google (8.8.8.8), and
+Apple, a route trace to 1.1.1.1, and a DNS lookup of apple.com per DNS server;
+speed tests only when you click (Apple's `networkQuality`); and, once a day,
 the update check, which downloads the list of releases from
 `mangocorporation.github.io/MangoStats/appcast.xml` (you can turn it off in
 Settings › General).

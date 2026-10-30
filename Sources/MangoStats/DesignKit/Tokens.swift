@@ -216,6 +216,8 @@ nonisolated enum Metric {
     static let historyChartHeight: CGFloat = 120
     static let historyCardHeight: CGFloat = 196
     static let legendStroke: CGFloat = 3
+    static let infoRowPadding: CGFloat = 3
+    static let pathStroke: CGFloat = 2
     static let headerIcon: CGFloat = 18
 }
 

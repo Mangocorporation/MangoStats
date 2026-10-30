@@ -512,6 +512,78 @@ Acceptance:
 - [snap] Segmented controls and "Show all <n>" like overview.png.
 Status: done
 
+## M11 Network tab
+
+Decided with the user (2026-10-30): permissions for Location (Wi-Fi name) and Local Network (devices,
+UPnP) are OK, each asked where it's needed; no outside IP/ISP lookups (the ISP is its first hop); speed
+tests only on click, with Apple's networkQuality. Probed on the M5 without root: route, ARP, ping (ICMP
+datagram sockets), traceroute, ipconfig getpacket, scutil --dns, CoreWLAN, networkQuality all work.
+This router does not answer UPnP.
+
+### S-039 See where a network problem is
+As the user, I open the Network tab and read one verdict ("Your Wi-Fi is the weak link", "Your ISP is slow right now", "All good") above a path: This Mac → Wi-Fi → Router → ISP → Internet, with latency and loss on each step.
+Screens: network
+Acceptance:
+- [unit] The verdict blames the first step that is bad: Wi-Fi (SNR under 20 dB or link under 50 Mbps), router (loss over 2 % or over 20 ms), ISP (first ISP hop over 40 ms or loss), internet (sites over 100 ms or loss); calm when all are fine; "Offline" when the router doesn't answer.
+- [unit] Latency stats from samples: average, jitter (mean absolute difference), loss %.
+- [self] Router and internet are pinged without root (ICMP datagram sockets).
+- [snap] Path diagram with a color per step: mint fine, accent slow, coral failing.
+UX:
+- Flow: window tab "Network" (⌘3) -> verdict + path at once -> hover a step for its numbers
+- Words: "All good", "Your Wi-Fi is the weak link", "Your router is dropping packets", "Your ISP is slow right now", "The internet is slow right now", "Offline"
+Note: verified live: router 24 ms, ISP 29 ms, internet 39 ms on this Mac; pings match each reply to its target (FIXLOG).
+Status: done
+
+### S-040 Check my router
+As the user, I see my router's address, maker, latency, jitter, loss, how long its DHCP lease lasts, whether it's my DNS, and its model and internet link when it offers UPnP.
+Screens: network
+Depends: S-039
+Acceptance:
+- [unit] The maker comes from the MAC's OUI (bundled IEEE list); a locally administered MAC reads "Private address".
+- [self] Router address from the default route, MAC from ARP, lease from ipconfig getpacket.
+- [manual] With Local Network allowed and a UPnP router, model and WAN status show; otherwise "This router doesn't share details (UPnP is off)".
+Note: router maker from the bundled IEEE list (Tellescom here); this router doesn't answer UPnP, so Model reads "Not shared (UPnP is off)".
+Status: done
+
+### S-041 Check my Wi-Fi
+As the user, I see signal, noise, and SNR in plain words, link rate, band, channel and width, Wi-Fi standard, and security; and the network name after I allow Location.
+Screens: network
+Acceptance:
+- [unit] Signal ratings: SNR ≥ 40 excellent, ≥ 25 good, ≥ 15 fair, else poor; standards and bands named ("Wi-Fi 6", "5 GHz").
+- [manual] "Show Network Name…" asks for Location; denied keeps "Hidden" with a button to System Settings.
+- [snap] On Ethernet the card shows link speed instead.
+Note: Wi-Fi 5, 5 GHz ch 124 80 MHz, −72/−94 dBm, 22–24 dB SNR "Fair" read live. The Location prompt (Show Name…) needs a check by hand.
+Status: done
+
+### S-042 Check the internet and DNS
+As the user, I see latency, jitter, and loss to Cloudflare, Google, and Apple, how fast each DNS server answers, and recent outages.
+Screens: network
+Acceptance:
+- [unit] DNS query encoded and parsed for an A record; timing per server.
+- [self] Outages (router or internet unreachable for 10 s) are recorded with start and length.
+- [snap] Sites table and DNS rows.
+Status: done
+
+### S-043 Run a speed test
+As the user, I click "Run Speed Test" and see download, upload, and responsiveness, and past results.
+Screens: network
+Acceptance:
+- [unit] networkQuality's JSON parses into download/upload Mbps, responsiveness RPM, and idle latency.
+- [self] Results are stored and read back; a test can be cancelled.
+- [manual] The button shows progress for ~20 s and never runs on its own.
+Note: not run in tests (it uses a few hundred MB); needs a check by hand.
+Status: done
+
+### S-044 See devices on my network
+As the user, I allow Local Network and see devices that announce themselves (printers, speakers, TVs, other Macs) and every address the Mac has talked to, with makers.
+Screens: network
+Depends: S-040
+Acceptance:
+- [manual] The first look asks for Local Network; denied shows how to allow it.
+- [unit] ARP entries parse into address, MAC, and maker.
+Note: live: 8 devices, names from Bonjour (a MacBook Pro, a PlayStation, a Samsung TV), private addresses marked.
+Status: done
+
 ## Dropped
 - Clean, Apps, Optimize, Analyze tabs: another app's job (MangoCleaner).
 - "Cleaned / Uninstalled / Optimized" counters: belong to cleaning, not stats.

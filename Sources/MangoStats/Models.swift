@@ -21,10 +21,16 @@ enum Store {
 
 /// The Status window's pages. Snapshot mode walks through every case.
 enum Page: String, CaseIterable, Identifiable {
-    case status, history
+    case status, network, history
 
     var id: String { rawValue }
-    var title: String { self == .status ? "Overview" : "History" }
+    var title: String {
+        switch self {
+        case .status: "Overview"
+        case .network: "Network"
+        case .history: "History"
+        }
+    }
 }
 
 /// App-wide state that the menu bar item, popover, and windows share.

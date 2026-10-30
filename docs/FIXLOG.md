@@ -28,3 +28,10 @@ Cause: `ditto -c -k` stored extended attributes as `._` files next to Sparkle.fr
 Fix: `xattr -crs` in build.sh, `ditto --norsrc --noextattr` in release.sh, and release.sh now
 extracts the zip with plain `unzip` and requires Gatekeeper to accept it.
 Rule: Test a release the way people open it (plain unzip, quarantined), not only with the tools that built it.
+
+## 2026-10-30 Every site showed the router's latency
+Symptom: router, Cloudflare, Google, and Apple all read 9.2 ms with the same jitter.
+Cause: on macOS every ICMP datagram socket can receive every echo reply; with pings running in
+parallel, each socket took the first reply (the router's) as its own.
+Fix: accept a reply only from the target's address with our echo identifier (recvfrom + id check).
+Rule: When probes run in parallel, match each answer to its question (source and id), never "first reply wins".

@@ -53,3 +53,11 @@
 | Show alerts | The master switch for all alerts | enable notifications |
 | Busy app | One app using more CPU than its threshold for 5 minutes | hog, runaway |
 | Send Test Alert | Show a sample alert now | test notification |
+| Network tab | Where a connection problem is: path, router, Wi-Fi, internet, DNS, speed test, devices | diagnostics |
+| Path | This Mac → Wi-Fi → Router → ISP → Internet, a color per step | route, hops |
+| Jitter | How much latency varies between pings | variance |
+| Loss | Share of pings that got no answer | drops |
+| SNR | Wi-Fi signal above the noise, in dB; rated Excellent, Good, Fair, Poor | signal quality |
+| Run Speed Test | Measure download, upload, and responsiveness with Apple's networkQuality | bandwidth test |
+| Responsiveness | Round trips per minute under load (RPM): High, Medium, Low | bufferbloat |
+| Devices | Things on the local network the Mac has seen, named when they announce themselves | clients, hosts |

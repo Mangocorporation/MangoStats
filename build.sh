@@ -55,6 +55,8 @@ if [[ -d "$here/Icon/AppIcon.icon" ]]; then
   fi
   cp -X "$car" "$here/Resources/AppIcon.icns" "$app/Contents/Resources/"
 fi
+# Device makers for the Network tab (IEEE OUI list, tools/update-oui.sh).
+cp "$here/Resources/oui.txt" "$app/Contents/Resources/"
 # -s also clears the framework symlinks: an attribute left on one becomes a ._ file in the
 # release zip, and Gatekeeper rejects ._ files in a framework's root after some unzips.
 xattr -crs "$app"
@@ -71,7 +73,7 @@ for part in XPCServices/Installer.xpc XPCServices/Downloader.xpc Autoupdate Upda
   codesign $flags --preserve-metadata=entitlements --sign "$identity" "$sparkle/$part" 2>&1 | grep -v "replacing existing signature" || true
 done
 codesign $flags --sign "$identity" "$app/Contents/Frameworks/Sparkle.framework" 2>&1 | grep -v "replacing existing signature" || true
-codesign $flags --sign "$identity" "$app" 2>&1 | grep -v "replacing existing signature" || true
+codesign $flags --entitlements "$here/MangoStats.entitlements" --sign "$identity" "$app" 2>&1 | grep -v "replacing existing signature" || true
 echo "installed $app (signed: ${identity})"
 
 if [[ " $* " == *" --open "* ]]; then

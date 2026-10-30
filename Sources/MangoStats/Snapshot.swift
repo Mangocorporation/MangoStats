@@ -52,7 +52,8 @@ enum Snapshot {
                 NSApp.appearance = NSAppearance(named: mode == "light" ? .aqua : .darkAqua)
                 for page in Page.allCases where only?.contains(page.rawValue) ?? true {
                     model.page = page
-                    try? await Task.sleep(for: .seconds(0.8))
+                    // The Network tab measures live: give it a few rounds of pings and the slow checks.
+                    try? await Task.sleep(for: .seconds(page == .network ? 8 : 0.8))
                     capture(to: "\(dir)/\(page.rawValue)-\(mode).png", window: main)
                 }
             }
