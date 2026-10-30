@@ -10,6 +10,31 @@
     <language>en</language>
     <!-- releases, newest first -->
     <item>
+      <title>MangoStats 1.1</title>
+      <pubDate>Fri, 30 Oct 2026 17:46:22 GMT</pubDate>
+      <sparkle:version>202610301445</sparkle:version>
+      <sparkle:shortVersionString>1.1</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
+      <sparkle:fullReleaseNotesLink>https://github.com/Mangocorporation/MangoStats/releases/tag/v1.1</sparkle:fullReleaseNotesLink>
+      <description sparkle:format="markdown"><![CDATA[
+A new look, and an Overview that tells you what's worth a look.
+
+## New
+
+- **Overview.** The window opens with the one thing worth your attention, in plain words: "Memory is tight · Google Chrome is holding 12,5 GB", with **Review** to find that app in the process list and **Dismiss** to hide it until something changes. When nothing is wrong, it says so.
+- **Storage card** with "See what's using space", and five stat cards (CPU, GPU, Network, Battery, Fan) with live sparklines.
+- **Processes:** switch between All, Apps, and Background, sort by CPU or memory, filter by name or PID, and show the top 13 or all of them.
+- **The accent color you pick in Settings › Appearance now colors the whole app.** Amber is the new default.
+
+## Changed
+
+- A calmer, warmer dark design throughout: the window, the menu bar popover, History, and Settings.
+- Fan modes (Auto, Cool, Max) moved to a menu on the Fan card.
+- Numbers no longer animate as they change, which halves the energy MangoStats uses with the popover open.
+]]></description>
+      <enclosure url="https://github.com/Mangocorporation/MangoStats/releases/download/v1.1/MangoStats-1.1.zip" type="application/octet-stream" sparkle:edSignature="iUY9xNph+ZjsLoO7DIs4b84Xyu+ns/8JdonUOXsYKr6x3pYIvGUHy/CaH48nzNONy5FCRo8jkafxzEKToslTBg==" length="4159095"/>
+    </item>
+    <item>
       <title>MangoStats 1.0</title>
       <pubDate>Fri, 30 Oct 2026 17:20:50 GMT</pubDate>
       <sparkle:version>202610301420</sparkle:version>
