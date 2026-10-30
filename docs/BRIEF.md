@@ -36,4 +36,4 @@ Its own look, not stock Apple. Dark warm brown/olive background, rounded translu
 
 ## Not in version one
 - Clean, Apps, Optimize and Analyze tabs, and the "Cleaned / Uninstalled / Optimized" counters.
-- History beyond the live session, alerts and notifications, and iCloud sync.
+- iCloud sync of settings. (History came in M7, alerts in M8.)

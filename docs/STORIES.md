@@ -442,7 +442,8 @@ UX:
 - Surface: Settings tab (a place people come back to)
 - States: off (rules dimmed); on + allowed; on + denied (inline message and button); permission checked again every 2 s while the tab is open
 - Words: tab "Alerts"; "Show alerts"; "Send Test Alert"; "Open Notification Settings…"
-Status: todo
+Note: confirmed by hand (permission prompt, test alert, click opens the Status window).
+Status: done
 
 ### S-032 Get an alert when something needs attention
 As the user, I get one notification when memory pressure turns critical, the CPU runs hot or busy, disk space runs low, the battery runs low, or one app hogs the CPU.
@@ -461,7 +462,8 @@ As the user, I click an alert and the Status window opens.
 Depends: S-032
 Acceptance:
 - [manual] Clicking a notification opens the Status window in front; a busy-app alert also filters the process table to that app.
-Status: todo
+Note: confirmed by hand (permission prompt, test alert, click opens the Status window).
+Status: done
 
 ### S-034 Choose which alerts and when
 As the user, I turn each alert on or off and set its threshold in Settings → Alerts.
