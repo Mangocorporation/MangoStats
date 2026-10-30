@@ -21,10 +21,10 @@ enum Store {
 
 /// The Status window's pages. Snapshot mode walks through every case.
 enum Page: String, CaseIterable, Identifiable {
-    case status
+    case status, history
 
     var id: String { rawValue }
-    var title: String { "Status" }
+    var title: String { self == .status ? "Status" : "History" }
 }
 
 /// App-wide state that the menu bar item, popover, and windows share.
@@ -66,6 +66,14 @@ final class AppModel {
         didSet { Store.defaults.set(refreshInterval, forKey: "sampler.interval") }
     }
 
+    /// Days of history to keep: 7, 30, or 90 (S-030). Shorter prunes at once.
+    var historyDays: Int {
+        didSet {
+            Store.defaults.set(historyDays, forKey: "history.days")
+            HistoryStore.shared.prune(before: HistoryRetention.cutoff(days: historyDays, now: .now))
+        }
+    }
+
     var menuBarStyle: MenuBarStyle {
         didSet { Store.defaults.set(menuBarStyle.rawValue, forKey: "menuBar.style") }
     }
@@ -79,6 +87,8 @@ final class AppModel {
         let defaults = Store.defaults
         menuBar = MenuBarLayout(encodedOrder: defaults.string(forKey: "menuBar.order"),
                                 encodedEnabled: defaults.string(forKey: "menuBar.enabled"))
+        let days = defaults.integer(forKey: "history.days")
+        historyDays = HistoryRetention.choices.contains(days) ? days : HistoryRetention.defaultDays
         let interval = defaults.integer(forKey: "sampler.interval")
         refreshInterval = SampleSchedule.intervals.contains(interval) ? interval : 2
         menuBarStyle = MenuBarStyle(rawValue: defaults.string(forKey: "menuBar.style") ?? "") ?? .iconAndValue

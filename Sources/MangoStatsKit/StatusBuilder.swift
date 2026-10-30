@@ -17,6 +17,8 @@ public struct NetworkContext: Sendable {
 public struct StatusUpdate: Sendable {
     public var status: StatusData
     public var menuValues: [MenuBarStat: String]
+    /// The raw values of this reading for history (S-027); nil on the first reading (no CPU yet).
+    public var point: MinuteSample?
 }
 
 /// Turns readings into what the screens show (S-001 to S-008). Keeps the
@@ -205,7 +207,12 @@ public struct StatusBuilder: Sendable {
             .temperature: status.cpuTemp ?? "--",
             .fan: status.hasFan ? "\(status.fanRPM) RPM" : "--",
         ]
-        return StatusUpdate(status: status, menuValues: menuValues)
+        let point = first ? nil : MinuteSample(
+            time: reading.time, cpu: cpu, memory: memoryFraction, gpu: sensors.gpu,
+            cpuTemperature: sensors.cpuTemperature, gpuTemperature: sensors.gpuTemperature,
+            download: download, upload: upload, battery: reading.battery.map { Double($0.percent) / 100 },
+            cpuWatts: sensors.cpuWatts, gpuWatts: sensors.gpuWatts)
+        return StatusUpdate(status: status, menuValues: menuValues, point: point)
     }
 
     /// "Kept awake by Safari, Zoom" / "Nothing keeps the Mac awake".

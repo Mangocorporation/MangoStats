@@ -34,6 +34,9 @@ Sampler (app, @MainActor): every 2 s, reads off the main thread,     AppModel.st
 - **Seam:** `StatusBuilder.update(_:network:previous:)`. Two adapters: the Sampler with real readings,
   and the unit tests with made-up readings (no battery, offline, counter reset).
 - Processes are read only while the popover or Status window is open (`AppModel.detailVisible`).
+- History (M7): `StatusUpdate.point` -> `MinuteAggregator` (Kit) in the Sampler -> `HistoryStore`
+  (SQLite, own serial queue, `history.sqlite` in Application Support; `<APP_STORE>-history.sqlite` in
+  test runs). `HistoryView` reads it and downsamples with `HistoryRange` (Kit).
 - Snapshot runs skip the sampler and show `StatusData.sample` (app target), unless `APP_LIVE=1`.
 
 ## App folders
@@ -41,5 +44,5 @@ Sampler (app, @MainActor): every 2 s, reads off the main thread,     AppModel.st
 - `Sampling/` system readers, process reader (ps + proc_pid_rusage), sensor reader (IOAccelerator GPU load,
   SMC temperatures and fans, IOReport energy; links libIOReport), sampler.
 - `DesignKit/` tokens, icons, parts, gallery (design/KIT.md).
-- `PopoverView.swift`, `StatusView.swift`, `SettingsView.swift` the three surfaces.
+- `PopoverView.swift`, `StatusView.swift` (Status | History tabs), `HistoryView.swift`, `SettingsView.swift`.
 - `Models.swift` `AppModel` (menu bar layout, status, open surfaces) and `Store` (settings domain).

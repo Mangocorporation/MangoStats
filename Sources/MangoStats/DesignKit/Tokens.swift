@@ -59,6 +59,10 @@ enum Ink {
     static let controlPressed = Color.white.opacity(0.12)
     static let selectedSegment = Color.white.opacity(0.14)
     static let divider = Color.white.opacity(0.07)
+    /// The top tab bar: a white pill with dark text on the selected tab (status-window.png).
+    static let tabSelected = KitPalette.snow
+    static let tabSelectedText = Color.black.opacity(0.85)
+    static let chartGrid = Color.white.opacity(0.06)
 
     /// Stops measured down the reference window (vline x 200): 0, 32 %, 53 %.
     static let windowBackground = LinearGradient(stops: [
@@ -196,10 +200,19 @@ nonisolated enum Metric {
     static let colPID: CGFloat = 144
     static let colMore: CGFloat = 42
     static let searchWidth: CGFloat = 220
+    // Tab bar and History page
+    static let tabHeight: CGFloat = 28
+    static let tabPadding: CGFloat = 16
+    static let tabBarTop: CGFloat = 8
+    static let historyChartHeight: CGFloat = 120
+    static let legendStroke: CGFloat = 3
+    static let historyCardHeight: CGFloat = 196
 }
 
 enum Motion {
     static let hover = Animation.easeOut(duration: 0.12)
+    /// Not used on live values: animating every 2 s sample cost ~1.3 % CPU with the
+    /// popover open (2.77 % vs 1.3–1.6 %, tools/energy.sh, S-023).
     static let value = Animation.easeInOut(duration: 0.35)
 }
 

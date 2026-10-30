@@ -77,6 +77,7 @@ struct GeneralSettings: View {
             }
         }
         FanControlSection()
+        HistorySection()
         Section {
             Picker("Refresh every", selection: $model.refreshInterval) {
                 ForEach(SampleSchedule.intervals, id: \.self) { seconds in
@@ -101,6 +102,35 @@ struct GeneralSettings: View {
             loginError = "Unable to change the login item: \(error.localizedDescription)"
         }
         openAtLogin = LoginItem.isEnabled
+    }
+}
+
+/// History: how long it's kept, and Clear History… (S-030).
+struct HistorySection: View {
+    @Environment(AppModel.self) private var model
+    @State private var confirmClear = false
+
+    var body: some View {
+        @Bindable var model = model
+        Section {
+            Picker("Keep history for", selection: $model.historyDays) {
+                ForEach(HistoryRetention.choices, id: \.self) { Text("\($0) days").tag($0) }
+            }
+            HStack {
+                Spacer()
+                Button("Clear History…") { confirmClear = true }
+            }
+        } header: {
+            Text("History")
+        } footer: {
+            Text("Stored only on this Mac, about 1 MB per week.").foregroundStyle(.secondary)
+        }
+        .confirmationDialog("Clear History?", isPresented: $confirmClear) {
+            Button("Clear History", role: .destructive) { Task { await HistoryStore.shared.clear() } }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("All recorded stats will be deleted. This can't be undone.")
+        }
     }
 }
 

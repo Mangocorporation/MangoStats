@@ -201,3 +201,18 @@ func processSchedule() {
     #expect(!SampleSchedule.readProcesses(now: now, last: now.addingTimeInterval(-1)))
     #expect(SampleSchedule.readProcesses(now: now, last: now.addingTimeInterval(-2)))
 }
+
+@Test("Each reading after the first gives a history point")
+func historyPoint() {
+    var builder = StatusBuilder(system: system)
+    let first = builder.update(reading(at: 0), network: NetworkContext(), previous: .placeholder)
+    #expect(first.point == nil)
+    let second = builder.update(reading(at: 2, busyTicks: 25, idleTicks: 75, received: 4_000,
+                                        sensors: SensorReading(gpu: 0.4, cpuTemperature: 50)),
+                                network: NetworkContext(), previous: first.status)
+    #expect(second.point?.cpu == 0.25)
+    #expect(second.point?.memory == 0.75)
+    #expect(second.point?.gpu == 0.4)
+    #expect(second.point?.download == 2_000)
+    #expect(second.point?.battery == nil)
+}

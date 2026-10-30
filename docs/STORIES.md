@@ -367,11 +367,69 @@ Acceptance:
 - [self] MangoStats always starts in Auto.
 Status: done
 
+## M7 History
+
+Decided by the agent: one averaged sample per minute in a local SQLite file
+(~/Library/Application Support/MangoStats/history.sqlite), kept 30 days by default.
+
+### S-027 Record stats history
+As the user, I leave MangoStats running and it remembers how my Mac did, minute by minute, across restarts.
+Acceptance:
+- [unit] Samples average into one row per minute (CPU, GPU, memory, CPU and GPU temperature, download, upload, battery, CPU and GPU watts); missing sensors stay empty, not 0.
+- [self] A row is written each minute and read back after reopening the database.
+- [unit] Rows older than the retention are deleted once a day.
+- [self] Test and snapshot runs write to a database in /tmp, never the real one.
+Note: verified live: one row per minute with every sensor (sqlite3 read-back).
+Status: done
+
+### S-028 See history charts
+As the user, I switch the Status window to History and see charts for the last hour, day, week, or month.
+Screens: status-history
+Depends: S-027
+Acceptance:
+- [unit] A range downsamples to at most ~200 points: Hour 1 min, Day 10 min, Week 1 h, Month 4 h buckets.
+- [snap] Seven chart cards in two columns: CPU, GPU, Memory, Temperature (CPU and GPU), Network (down and up), Battery, Power (CPU and GPU), each in its stat color.
+- [snap] Empty state before the first minute: "History starts after a minute of recording."
+UX:
+- Flow: Status window top bar "Status | History" (⌘1 / ⌘2) → History → range "Hour, Day, Week, Month" (default Day) → charts redraw → switch back to Status
+- Surface: a page of the Status window (a place people come back to), switched by a segmented control in the top bar
+- States: empty (first minute) message; a stat this Mac lacks (no battery) hides its card; gaps when the Mac slept show as breaks, not lines
+- Words: "Status", "History"; ranges "Hour", "Day", "Week", "Month"; card titles CPU, GPU, MEMORY, TEMPERATURE, NETWORK, BATTERY, POWER; legends "CPU", "GPU", "Down", "Up"
+- Access: the range control is a segmented picker; each chart has an accessibility summary ("CPU, last day, average 18 percent, peak 64 percent")
+Status: done
+
+### S-029 Read a value at a time
+As the user, I hover a chart and see the value and time under the pointer.
+Screens: status-history
+Depends: S-028
+Acceptance:
+- [snap] A vertical rule and a callout "14:20 · 23 %" follow the pointer; every chart in the page shows the same time.
+UX:
+- Flow: move the pointer over a chart → rule and callout appear on all charts at that time → move out, they disappear
+- Surface: inline overlay on the charts
+- Words: callout "<time> · <value><unit>"; time format follows the system (14:20 or 2:20 PM), with the day for Week and Month ("Mon 14:00")
+- Access: VoiceOver uses the chart summary; Audio Graphs via Swift Charts
+Note: hover callout not in snapshots (needs a pointer); check by hand.
+Status: done
+
+### S-030 Choose how long history is kept
+As the user, I pick 7, 30, or 90 days in Settings → General, or clear history.
+Screens: settings-general
+Depends: S-027
+Acceptance:
+- [unit] Changing the retention prunes older rows right away.
+- [self] "Clear History…" asks first, then empties the database; the History page shows the empty state.
+UX:
+- Flow: Settings → General → History → "Keep history for" 7 / 30 / 90 days; "Clear History…" → confirmation "Clear History?" "All recorded stats will be deleted. This can't be undone." buttons "Clear History" / "Cancel"
+- Surface: Settings section; confirmation dialog for Clear (destroys data, can't be undone)
+- Words: "History", "Keep history for", "7 days", "30 days", "90 days", "Clear History…", footer "Stored only on this Mac, about 1 MB per week."
+Status: done
+
 ## Dropped
 - Clean, Apps, Optimize, Analyze tabs: another app's job (MangoCleaner).
 - "Cleaned / Uninstalled / Optimized" counters: belong to cleaning, not stats.
 - The reference app's upgrade button: vendor-only.
 
 ## Later
-- Stats history across days, and alerts (e.g. memory pressure critical).
+- Alerts (e.g. memory pressure critical).
 - iCloud sync of settings.

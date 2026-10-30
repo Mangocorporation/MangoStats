@@ -45,3 +45,7 @@
 | Fan control | Letting MangoStats set the fan through its helper | fan override |
 | Helper | The small part of MangoStats that runs as root to set the fan | daemon, service, tool |
 | Auto / Cool / Max | Fan modes: macOS decides / 60 % / full speed | quiet, turbo, boost |
+| History | Recorded stats over time, one averaged sample per minute | log, timeline, records |
+| Hour / Day / Week / Month | The time range shown on the History page | period, span |
+| Keep history for | How long recorded stats are kept | retention |
+| Clear History… | Delete all recorded stats | reset, wipe |

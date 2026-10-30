@@ -13,6 +13,9 @@ final class Sampler {
     private var builder = StatusBuilder(system: SystemInfo.read())
     private var network = NetworkContext()
     private var lastProcessRead: Date?
+    /// History (S-027): minutes are averaged here and written once a minute.
+    fileprivate var minutes = MinuteAggregator()
+    fileprivate var lastPrune: Date?
     /// Free space goes through CacheDelete, which validates every volume:
     /// it was 56 % of the app's CPU at a 2 s refresh. It barely changes, so
     /// it is read every 30 s (S-023).
@@ -80,6 +83,8 @@ final class Sampler {
         }.value
         if readDisk { disk = (reading.disk, reading.time) }
         let update = builder.update(reading, network: network, previous: model.status)
+        record(update.point, retentionDays: model.historyDays)
+
         // Fan control (S-025): send the wanted mode, then show what is applied.
         FanControl.shared.tick()
         var status = update.status
@@ -91,6 +96,17 @@ final class Sampler {
     }
 }
 
+
+extension Sampler {
+    fileprivate func record(_ point: MinuteSample?, retentionDays: Int) {
+        guard let point else { return }
+        if let minute = minutes.add(point) { HistoryStore.shared.insert(minute) }
+        if lastPrune.map({ point.time.timeIntervalSince($0) > 86_400 }) ?? true {
+            lastPrune = point.time
+            HistoryStore.shared.prune(before: HistoryRetention.cutoff(days: retentionDays, now: point.time))
+        }
+    }
+}
 
 /// Times a TCP connect to 1.1.1.1:443; nil when it fails (S-006).
 nonisolated enum LatencyProbe {

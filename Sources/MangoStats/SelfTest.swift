@@ -95,6 +95,22 @@ enum SelfTest {
                   && FileManager.default.fileExists(atPath: Bundle.main.bundlePath
                       + "/Contents/Library/LaunchDaemons/\(FanHelper.plistName)"))
 
+            // S-027, S-030: history in a /tmp database.
+            let store = HistoryStore(url: URL(fileURLWithPath: "/tmp/MangoStats-selftest-history.sqlite"))
+            await store.clear()
+            let minute = MinuteAggregator.minuteStart(.now)
+            store.insert(MinuteSample(time: minute, cpu: 0.25, memory: 0.5, gpu: nil, download: 1_000))
+            store.insert(MinuteSample(time: minute.addingTimeInterval(-40 * 86_400), cpu: 0.9, memory: 0.9))
+            await store.flush()
+            let reopened = HistoryStore(url: URL(fileURLWithPath: "/tmp/MangoStats-selftest-history.sqlite"))
+            let rows = await reopened.minutes(since: minute.addingTimeInterval(-50 * 86_400))
+            check("history minutes are written and read back", rows.count == 2 && rows.last?.cpu == 0.25 && rows.last?.gpu == nil)
+            reopened.prune(before: HistoryRetention.cutoff(days: 30, now: .now))
+            check("old minutes are pruned", await reopened.minutes(since: .distantPast).count == 1)
+            await reopened.clear()
+            check("Clear History empties the database", await reopened.minutes(since: .distantPast).isEmpty)
+            check("test runs use a history file in /tmp", HistoryStore.defaultURL.path.hasPrefix("/tmp/"))
+
             // S-014: Quit ends a process of this user.
             let child = Process()
             child.executableURL = URL(fileURLWithPath: "/bin/sleep")

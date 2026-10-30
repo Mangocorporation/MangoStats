@@ -11,11 +11,23 @@ struct StatusView: View {
         Group {
             if KitGallery.enabled {
                 KitGallery()
+            } else if model.page == .history {
+                HistoryView()
+                    .padding(.horizontal, Metric.windowMargin)
+                    .padding(.top, Metric.windowTop)
+                    .padding(.bottom, Metric.windowMargin)
             } else {
                 dashboard
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .overlay(alignment: .top) {
+            if !KitGallery.enabled {
+                @Bindable var model = model
+                KitTabBar(tabs: Page.allCases, selection: $model.page, title: \.title)
+                    .padding(.top, Metric.tabBarTop)
+            }
+        }
         .background(Ink.windowBackground)
         .ignoresSafeArea()
         .background(WindowChrome())
