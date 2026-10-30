@@ -10,6 +10,31 @@
     <language>en</language>
     <!-- releases, newest first -->
     <item>
+      <title>MangoStats 1.2</title>
+      <pubDate>Fri, 30 Oct 2026 19:06:34 GMT</pubDate>
+      <sparkle:version>202610301606</sparkle:version>
+      <sparkle:shortVersionString>1.2</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
+      <sparkle:fullReleaseNotesLink>https://github.com/Mangocorporation/MangoStats/releases/tag/v1.2</sparkle:fullReleaseNotesLink>
+      <description sparkle:format="markdown"><![CDATA[
+A Network tab that tells you where a connection problem is.
+
+## New
+
+- **Network tab** (⌘2). One verdict in plain words — *"All good"*, *"Your Wi-Fi is the weak link"*, *"Your ISP is slow right now"* — above the path from this Mac through Wi-Fi, your router, and your ISP to the internet, with latency on each step.
+- **Router:** its address and maker, latency, jitter, packet loss, DHCP lease, whether it's your DNS, and its model when it shares one.
+- **Wi-Fi:** signal, noise, and SNR rated Excellent to Poor, link rate, band, channel, Wi-Fi standard, security, and the network's name (macOS asks for Location to show it; MangoStats never uses your location).
+- **Internet and DNS:** latency, jitter, and loss to Cloudflare, Google, and Apple, how fast each DNS server answers, and outages while you watch.
+- **Speed test** with Apple's own networkQuality: download, upload, and responsiveness, only when you click.
+- **Devices** on your network with their makers, named when they announce themselves.
+
+## Privacy
+
+The Network tab works only while it's open. It pings your router and three well-known sites, traces the route to 1.1.1.1, and asks each of your DNS servers for apple.com. macOS asks for Local Network access the first time. Nothing about your network leaves your Mac.
+]]></description>
+      <enclosure url="https://github.com/Mangocorporation/MangoStats/releases/download/v1.2/MangoStats-1.2.zip" type="application/octet-stream" sparkle:edSignature="r5fSkH68DCd3dJkppVEL2PPTrOhU+IjFUzjK8Cy9MeS+an8u9/jF0OlMgWb2w2pdtvRnIBohRXUNeJm8XIvGDQ==" length="4764035"/>
+    </item>
+    <item>
       <title>MangoStats 1.1</title>
       <pubDate>Fri, 30 Oct 2026 17:46:22 GMT</pubDate>
       <sparkle:version>202610301445</sparkle:version>
