@@ -48,4 +48,4 @@ Revisit after S-016.
 - Splitting AppModel: 90 lines, 2 s update rate, no fast-changing state.
 
 ## Top recommendation
-Status building moves out of the Sampler (Strong). Done in this check-in.
+Status building moves out of the Sampler (Strong). Done in this check-in: commits 4d609d5 (move types) and the StatusBuilder commit. Sampler 253 → 115 lines; 6 new builder tests.
