@@ -306,14 +306,16 @@ Status: done
 As the user, I see a MangoStats icon in the Dock, Settings, and Finder.
 Acceptance:
 - [snap] The icon renders in light, dark, and tinted looks.
-Status: todo
+Note: icon review in design/icon-review.png (Default, Dark, Tinted, Clear, 32 and 16 pt).
+Status: done
 
 ### S-023 Popover stays light on energy
 As the user, I leave the app running all day without it showing in Activity Monitor's energy list.
 Acceptance:
 - [manual] Average CPU under 1 % with the popover closed and under 3 % with it open (measured in Instruments).
 - [self] Charts and the process list stop updating while the popover and window are closed; only the menu bar values refresh.
-Status: todo
+Note: measured with tools/energy.sh (CPU time over 30 s, release build): closed 0.73 %, popover 1.37 %, window 1.87 %. Was 5.87 / 4.20 / 4.97 %: free space (CacheDelete) was 56 % of samples, now read every 30 s; the menu bar image re-renders only when its text changes.
+Status: done
 
 ## Dropped
 - Clean, Apps, Optimize, Analyze tabs: another app's job (MangoCleaner).

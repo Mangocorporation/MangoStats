@@ -13,6 +13,11 @@ final class Sampler {
     private var builder = StatusBuilder(system: SystemInfo.read())
     private var network = NetworkContext()
     private var lastProcessRead: Date?
+    /// Free space goes through CacheDelete, which validates every volume:
+    /// it was 56 % of the app's CPU at a 2 s refresh. It barely changes, so
+    /// it is read every 30 s (S-023).
+    private var disk: (reading: DiskReading?, time: Date)?
+    private static let diskInterval: TimeInterval = 30
 
     private let pathMonitor = NWPathMonitor()
     private var latencyTask: Task<Void, Never>?
@@ -65,12 +70,15 @@ final class Sampler {
         if wantProcesses { lastProcessRead = .now }
         let reader = processReader
         let sensors = sensorReader
+        let readDisk = disk.map { Date.now.timeIntervalSince($0.time) >= Self.diskInterval } ?? true
+        let lastDisk = disk?.reading
         let reading = await Task.detached(priority: .utility) {
-            Reading(ticks: CPUReader.ticks(), memory: MemoryReader.read(), disk: DiskReader.read(),
+            Reading(ticks: CPUReader.ticks(), memory: MemoryReader.read(), disk: readDisk ? DiskReader.read() : lastDisk,
                     network: NetworkReader.counters(), battery: BatteryReader.read(),
                     processes: wantProcesses ? reader.read() : nil, sensors: sensors.read(),
                     privacy: PrivacyReader.read(), time: .now)
         }.value
+        if readDisk { disk = (reading.disk, reading.time) }
         let update = builder.update(reading, network: network, previous: model.status)
         model.status = update.status
         model.menuValues = update.menuValues
