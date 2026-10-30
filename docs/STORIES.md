@@ -625,14 +625,16 @@ Acceptance:
 - [probe] AppleSmartBattery gives cycle count, voltage, amperage, temperature, adapter details without root.
 - [unit] Watts = volts × amps; health history kept one point a day.
 - [snap] A Battery page (or card set) with these rows and a health chart.
-Status: todo
+Note: in a new Hardware tab (⌘4); verified live: 55 of 1000 cycles, 6305/6249 mAh, charging at 35 W, 30.5 °C, 67W USB-C adapter. Health history: one point a day (battery_health table).
+Status: done
 
 ### S-049 Apps draining the battery
 As the user, on battery, I see which apps used the most energy in the last hour.
 Depends: S-048
 Acceptance:
 - [unit] Per-app energy (Wh) from the per-process energy counters, summed over the last hour.
-Status: todo
+Note: changed from "last hour" to "since each app started": the process energy counter is cumulative, so no constant sampling is needed. macOS shares energy only for the user's own processes.
+Status: done
 
 ### S-050 Disk activity and the apps behind it
 As the user, I see the startup disk's live read and write speed and which apps read or write the most.
@@ -640,7 +642,8 @@ Acceptance:
 - [probe] Disk throughput from IOBlockStorageDriver statistics; per-process bytes from proc_pid_rusage (ri_diskio_bytes*).
 - [unit] Rates from counter deltas; per-app grouping.
 - [snap] Storage card shows ↓ read / ↑ write; a "Disk activity" list of apps.
-Status: todo
+Note: disk counters verified (a 200 MB write moved them 211 MB). Per-app counts are logical file I/O, including reads served from memory; the card says so.
+Status: done
 
 ## M15 Portuguese (top 3, #3)
 

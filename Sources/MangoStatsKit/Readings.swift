@@ -22,10 +22,15 @@ public struct DiskReading: Sendable {
     public var total: Int64
     /// Includes purgeable space, like Finder (S-005).
     public var free: Int64
+    /// Bytes read and written by the disks since startup (S-050).
+    public var readBytes: Int64?
+    public var writtenBytes: Int64?
 
-    public init(total: Int64, free: Int64) {
+    public init(total: Int64, free: Int64, readBytes: Int64? = nil, writtenBytes: Int64? = nil) {
         self.total = total
         self.free = free
+        self.readBytes = readBytes
+        self.writtenBytes = writtenBytes
     }
 }
 
@@ -38,9 +43,30 @@ public struct BatteryReading: Sendable {
     public var adapterWatts: Int?
     /// Minutes to full or to empty; nil while macOS is still estimating.
     public var minutesLeft: Int?
+    /// Details for the Hardware tab (S-048); nil where the battery doesn't report them.
+    public var cycleCount: Int?
+    public var designCycles: Int?
+    public var maxCapacity: Int?
+    public var designCapacity: Int?
+    /// Volts and amps (amps are negative while discharging).
+    public var voltage: Double?
+    public var amperage: Double?
+    /// °C.
+    public var temperature: Double?
+    public var adapterName: String?
 
     public init(percent: Int, health: Int, charging: Bool, pluggedIn: Bool, charged: Bool,
-                adapterWatts: Int?, minutesLeft: Int?) {
+                adapterWatts: Int?, minutesLeft: Int?, cycleCount: Int? = nil, designCycles: Int? = nil,
+                maxCapacity: Int? = nil, designCapacity: Int? = nil, voltage: Double? = nil, amperage: Double? = nil,
+                temperature: Double? = nil, adapterName: String? = nil) {
+        self.cycleCount = cycleCount
+        self.designCycles = designCycles
+        self.maxCapacity = maxCapacity
+        self.designCapacity = designCapacity
+        self.voltage = voltage
+        self.amperage = amperage
+        self.temperature = temperature
+        self.adapterName = adapterName
         self.percent = percent
         self.health = health
         self.charging = charging

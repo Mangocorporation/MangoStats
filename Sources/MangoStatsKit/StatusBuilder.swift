@@ -36,6 +36,9 @@ public struct StatusBuilder: Sendable {
     private var networkHistory = History()
     private var gpuHistory = History()
     private var batteryHistory = History()
+    private var diskReadHistory = History()
+    private var diskWriteHistory = History()
+    private var lastDisk: (read: Int64, written: Int64, time: Date)?
     private var fanHistory = History()
     private var cpuMinute = History(capacity: 30)
 
@@ -169,7 +172,8 @@ public struct StatusBuilder: Sendable {
                                cpu: group.cpu, cpuText: Format.number(group.cpu, digits: 1),
                                power: group.power.map { Format.number($0, digits: 1) } ?? "--",
                                bundlePath: group.bundlePath, memoryBytes: group.memory, watts: group.power,
-                               ownedByUser: group.owned)
+                               ownedByUser: group.owned, diskRate: group.diskRate,
+                               energyWh: group.energy.map { $0 / 3600 })
             }
             if let drain = groups.max(by: { $0.cpu < $1.cpu }), drain.cpu > 1 {
                 status.batteryDrain = "Top drain now \(drain.name)"
@@ -219,6 +223,46 @@ public struct StatusBuilder: Sendable {
             diskFree: reading.disk?.free, diskTotal: reading.disk?.total, cpuTemperature: sensors.cpuTemperature,
             topMemory: topMemory.map { ($0.name, $0.memoryBytes) }, topCPU: topCPU.map { ($0.name, $0.cpu) },
             battery: reading.battery.map { ($0.percent, !$0.pluggedIn) }))
+
+        // Battery details (S-048)
+        if let battery = reading.battery {
+            if let cycles = battery.cycleCount {
+                status.batteryCycles = battery.designCycles.map { "\(cycles) of \(Format.number(Double($0), digits: 0))" } ?? "\(cycles)"
+            }
+            if let max = battery.maxCapacity, let design = battery.designCapacity {
+                status.batteryCapacity = "\(Format.number(Double(max), digits: 0)) of \(Format.number(Double(design), digits: 0)) mAh"
+            }
+            if let volts = battery.voltage, let amps = battery.amperage {
+                let watts = abs(volts * amps)
+                status.batteryPower = amps > 0.05 ? "Charging at \(Format.watts(watts))"
+                    : amps < -0.05 ? "Using \(Format.watts(watts))" : "Idle"
+            }
+            status.batteryTemperature = battery.temperature.map { "\(Format.number($0, digits: 1)) °C" } ?? "–"
+            status.batteryCondition = battery.health >= 80 ? "Normal" : "Service recommended"
+            if let name = battery.adapterName, battery.pluggedIn {
+                status.batteryAdapter = battery.adapterWatts.map { "\(name) · \($0) W" } ?? name
+            } else {
+                status.batteryAdapter = battery.pluggedIn ? "Connected" : "Not connected"
+            }
+        }
+
+        // Disk activity (S-050)
+        if let disk = reading.disk, let read = disk.readBytes, let written = disk.writtenBytes {
+            if let last = lastDisk {
+                let seconds = reading.time.timeIntervalSince(last.time)
+                let readRate = Rate.perSecond(previous: UInt64(max(last.read, 0)), current: UInt64(max(read, 0)), seconds: seconds)
+                let writeRate = Rate.perSecond(previous: UInt64(max(last.written, 0)), current: UInt64(max(written, 0)), seconds: seconds)
+                diskReadHistory.append(readRate)
+                diskWriteHistory.append(writeRate)
+                let r = Format.speed(readRate)
+                let w = Format.speed(writeRate)
+                status.diskRead = "\(r.value) \(r.unit)"
+                status.diskWrite = "\(w.value) \(w.unit)"
+                status.diskReadHistory = diskReadHistory.values
+                status.diskWriteHistory = diskWriteHistory.values
+            }
+            lastDisk = (read, written, reading.time)
+        }
 
         // Camera, mic, and sleep (S-019)
         let privacy = reading.privacy

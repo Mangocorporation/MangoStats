@@ -114,16 +114,28 @@ extension StatusData {
             Insight(kind: .disk, eyebrow: "Storage is filling up", title: "98 GB free",
                     body: "Below 10% free, macOS can't keep caches.", app: nil),
         ]
+        data.batteryCycles = "55 of 1000"
+        data.batteryCapacity = "6305 of 6249 mAh"
+        data.batteryPower = "Using 8,4 W"
+        data.batteryTemperature = "30,5 °C"
+        data.batteryCondition = "Normal"
+        data.batteryAdapter = "Not connected"
+        data.batteryHealth = "100% Health"
+        data.diskRead = "12 MB/s"
+        data.diskWrite = "3 MB/s"
+        data.diskReadHistory = [2, 4, 3, 12, 30, 8, 5, 3, 2, 12, 6, 4].map { $0 * 1_000_000 }
+        data.diskWriteHistory = [1, 1, 2, 3, 6, 2, 1, 1, 3, 3, 2, 1].map { $0 * 1_000_000 }
         data.processCount = 541
         data.processes = [
             .init(id: 1350, name: "Google Chrome", memory: "19,4 GB", cpu: 47.0, cpuText: "47,0", power: "0,1",
-                  bundlePath: "/Applications/Google Chrome.app", memoryBytes: 20_830_000_000, watts: 0.1),
+                  bundlePath: "/Applications/Google Chrome.app", memoryBytes: 20_830_000_000, watts: 1.8,
+                  diskRate: 2_400_000, energyWh: 51.1),
             .init(id: 589, name: "WindowServer", memory: "111 MB", cpu: 9.3, cpuText: "9,3", power: "–",
                   memoryBytes: 116_000_000, ownedByUser: false),
             .init(id: 12614, name: "claude", memory: "362 MB", cpu: 8.9, cpuText: "8,9", power: "0,0",
                   memoryBytes: 380_000_000, watts: 0),
             .init(id: 36968, name: "Warp", memory: "852 MB", cpu: 8.5, cpuText: "8,5", power: "0,0",
-                  bundlePath: "/Applications/Warp.app", memoryBytes: 893_000_000, watts: 0),
+                  bundlePath: "/Applications/Warp.app", memoryBytes: 893_000_000, watts: 0.32, diskRate: 160_000, energyWh: 2.4),
             .init(id: 1356, name: "Finder", memory: "362 MB", cpu: 1.9, cpuText: "1,9", power: "0,0",
                   bundlePath: "/System/Library/CoreServices/Finder.app", memoryBytes: 380_000_000, watts: 0),
             .init(id: 43194, name: "claude", memory: "373 MB", cpu: 1.2, cpuText: "1,2", power: "0,0",
@@ -131,7 +143,8 @@ extension StatusData {
             .init(id: 92152, name: "MangoStats", memory: "82 MB", cpu: 1.1, cpuText: "1,1", power: "0,0",
                   bundlePath: "/Applications/MangoStats.app", memoryBytes: 86_000_000, watts: 0),
             .init(id: 25396, name: "Visual Studio Code", memory: "1,5 GB", cpu: 1.1, cpuText: "1,1", power: "0,0",
-                  bundlePath: "/Applications/Visual Studio Code.app", memoryBytes: 1_610_000_000, watts: 0),
+                  bundlePath: "/Applications/Visual Studio Code.app", memoryBytes: 1_610_000_000, watts: 0.21,
+                  diskRate: 640_000, energyWh: 6.8),
             .init(id: 1247, name: "WindowManager", memory: "40 MB", cpu: 1.0, cpuText: "1,0", power: "0,0",
                   memoryBytes: 42_000_000, watts: 0),
             .init(id: 1178, name: "corespotlightd", memory: "44 MB", cpu: 0.4, cpuText: "0,4", power: "0,0",

@@ -33,6 +33,7 @@ nonisolated final class HistoryStore: @unchecked Sendable {
             CREATE TABLE IF NOT EXISTS speed_tests (
                 time INTEGER PRIMARY KEY, download REAL NOT NULL, upload REAL NOT NULL,
                 responsiveness REAL, idle_latency REAL);
+            CREATE TABLE IF NOT EXISTS battery_health (day INTEGER PRIMARY KEY, health INTEGER NOT NULL);
             CREATE TABLE IF NOT EXISTS outages (
                 start INTEGER PRIMARY KEY, end INTEGER NOT NULL, what TEXT NOT NULL);
             """)
@@ -127,6 +128,28 @@ nonisolated final class HistoryStore: @unchecked Sendable {
         }
     }
 
+    /// Battery health, one point a day; kept regardless of the history length (S-048).
+    func recordBatteryHealth(_ health: Int, on date: Date) {
+        let day = Int64(Calendar.current.startOfDay(for: date).timeIntervalSince1970)
+        queue.async { self.exec("INSERT OR IGNORE INTO battery_health (day, health) VALUES (\(day), \(health));") }
+    }
+
+    func batteryHealthHistory() async -> [(day: Date, health: Int)] {
+        await withCheckedContinuation { continuation in
+            queue.async {
+                guard let statement = self.prepare("SELECT day, health FROM battery_health ORDER BY day")
+                else { return continuation.resume(returning: []) }
+                defer { sqlite3_finalize(statement) }
+                var rows: [(day: Date, health: Int)] = []
+                while sqlite3_step(statement) == SQLITE_ROW {
+                    rows.append((Date(timeIntervalSince1970: Double(sqlite3_column_int64(statement, 0))),
+                                 Int(sqlite3_column_int(statement, 1))))
+                }
+                continuation.resume(returning: rows)
+            }
+        }
+    }
+
     /// An outage that ended (S-042).
     func addOutage(start: Date, end: Date, what: String) {
         queue.async {
@@ -172,7 +195,7 @@ nonisolated final class HistoryStore: @unchecked Sendable {
     func clear() async {
         await withCheckedContinuation { continuation in
             queue.async {
-                self.exec("DELETE FROM minutes; DELETE FROM speed_tests; DELETE FROM outages; VACUUM;")
+                self.exec("DELETE FROM minutes; DELETE FROM speed_tests; DELETE FROM outages; DELETE FROM battery_health; VACUUM;")
                 continuation.resume()
             }
         }

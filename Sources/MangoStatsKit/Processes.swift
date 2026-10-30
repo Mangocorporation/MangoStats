@@ -11,8 +11,14 @@ public struct ProcessSample: Equatable, Sendable {
     public var power: Double?
     /// True when the process belongs to this user, so it can be quit (S-014).
     public var owned: Bool
+    /// Disk bytes per second since the last read, and energy used since the process started (joules).
+    public var diskRate: Double?
+    public var energy: Double?
 
-    public init(pid: Int32, path: String, memory: Int64, cpu: Double, power: Double?, owned: Bool = false) {
+    public init(pid: Int32, path: String, memory: Int64, cpu: Double, power: Double?, owned: Bool = false,
+                diskRate: Double? = nil, energy: Double? = nil) {
+        self.diskRate = diskRate
+        self.energy = energy
         self.pid = pid
         self.path = path
         self.memory = memory
@@ -35,6 +41,8 @@ public struct ProcessGroup: Equatable, Sendable {
     public var count: Int
     /// The main process belongs to this user.
     public var owned: Bool = false
+    public var diskRate: Double?
+    public var energy: Double?
 }
 
 public enum ProcessGrouping {
@@ -65,6 +73,8 @@ public enum ProcessGrouping {
                 group.memory += sample.memory
                 group.cpu += sample.cpu
                 if let power = sample.power { group.power = (group.power ?? 0) + power }
+                if let disk = sample.diskRate { group.diskRate = (group.diskRate ?? 0) + disk }
+                if let energy = sample.energy { group.energy = (group.energy ?? 0) + energy }
                 group.count += 1
                 if sample.path.count < mainPathLength[key, default: .max] {
                     group.pid = sample.pid
@@ -75,7 +85,7 @@ public enum ProcessGrouping {
             } else {
                 groups[key] = ProcessGroup(name: name(of: sample.path), bundlePath: app, pid: sample.pid,
                                            memory: sample.memory, cpu: sample.cpu, power: sample.power, count: 1,
-                                           owned: sample.owned)
+                                           owned: sample.owned, diskRate: sample.diskRate, energy: sample.energy)
                 mainPathLength[key] = sample.path.count
             }
         }

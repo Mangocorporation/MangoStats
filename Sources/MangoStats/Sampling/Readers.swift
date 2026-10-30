@@ -61,7 +61,29 @@ nonisolated enum DiskReader {
         guard let values = try? URL(fileURLWithPath: "/").resourceValues(forKeys: keys),
               let total = values.volumeTotalCapacity,
               let free = values.volumeAvailableCapacityForImportantUsage else { return nil }
-        return DiskReading(total: Int64(total), free: free)
+        let io = ioCounters()
+        return DiskReading(total: Int64(total), free: free, readBytes: io?.read, writtenBytes: io?.written)
+    }
+
+    /// Bytes read and written by every disk since startup (IOBlockStorageDriver statistics).
+    static func ioCounters() -> (read: Int64, written: Int64)? {
+        var iterator: io_iterator_t = 0
+        guard IOServiceGetMatchingServices(kIOMainPortDefault, IOServiceMatching("IOBlockStorageDriver"), &iterator) == KERN_SUCCESS
+        else { return nil }
+        defer { IOObjectRelease(iterator) }
+        var read: Int64 = 0
+        var written: Int64 = 0
+        var service = IOIteratorNext(iterator)
+        while service != 0 {
+            if let stats = IORegistryEntryCreateCFProperty(service, "Statistics" as CFString, kCFAllocatorDefault, 0)?
+                .takeRetainedValue() as? [String: Any] {
+                read += (stats["Bytes (Read)"] as? NSNumber)?.int64Value ?? 0
+                written += (stats["Bytes (Write)"] as? NSNumber)?.int64Value ?? 0
+            }
+            IOObjectRelease(service)
+            service = IOIteratorNext(iterator)
+        }
+        return (read, written)
     }
 }
 
@@ -117,12 +139,19 @@ nonisolated enum BatteryReader {
         let charging = bool("IsCharging")
         let minutes = charging ? int("AvgTimeToFull") : int("AvgTimeToEmpty")
         let adapter = props["AdapterDetails"] as? [String: Any]
+        // Amperage can arrive as an unsigned 64-bit number while discharging: read it as signed.
+        let amps = (props["Amperage"] as? NSNumber).map { Double(Int64(bitPattern: $0.uint64Value)) / 1000 }
         return BatteryReading(percent: min(percent, 100),
                               health: Battery.health(maxCapacity: rawMax, designCapacity: design),
                               charging: charging, pluggedIn: bool("ExternalConnected"),
                               charged: bool("FullyCharged") || (bool("ExternalConnected") && !charging && percent >= 99),
                               adapterWatts: (adapter?["Watts"] as? NSNumber)?.intValue,
-                              minutesLeft: minutes.flatMap { $0 > 0 && $0 < 65_535 ? $0 : nil })
+                              minutesLeft: minutes.flatMap { $0 > 0 && $0 < 65_535 ? $0 : nil },
+                              cycleCount: int("CycleCount"), designCycles: int("DesignCycleCount9C"),
+                              maxCapacity: int("AppleRawMaxCapacity"), designCapacity: int("DesignCapacity"),
+                              voltage: int("Voltage").map { Double($0) / 1000 }, amperage: amps,
+                              temperature: int("Temperature").map { Double($0) / 100 },
+                              adapterName: adapter?["Name"] as? String)
     }
 }
 

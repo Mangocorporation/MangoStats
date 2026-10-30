@@ -87,6 +87,18 @@ public struct StatusData: Sendable {
     /// Fan speed as a share of its top speed.
     public var fanHistory: [Double] = []
 
+    /// Hardware tab: battery details (S-048) and disk activity (S-050).
+    public var batteryCycles: String = "–"
+    public var batteryCapacity: String = "–"
+    public var batteryPower: String = "–"
+    public var batteryTemperature: String = "–"
+    public var batteryCondition: String = "–"
+    public var batteryAdapter: String = "–"
+    public var diskRead: String = "--"
+    public var diskWrite: String = "--"
+    public var diskReadHistory: [Double] = []
+    public var diskWriteHistory: [Double] = []
+
     public var processCount: Int = 0
     public var processes: [ProcessRowData] = []
 
@@ -112,9 +124,15 @@ public struct ProcessRowData: Identifiable, Hashable, Sendable {
     public var watts: Double?
     /// False for processes of other users: Quit is unavailable (S-014).
     public var ownedByUser: Bool
+    /// Disk bytes per second, and energy used since the app started (watt-hours) (S-049, S-050).
+    public var diskRate: Double?
+    public var energyWh: Double?
 
     public init(id: Int32, name: String, memory: String, cpu: Double, cpuText: String, power: String,
-                bundlePath: String? = nil, memoryBytes: Int64 = 0, watts: Double? = nil, ownedByUser: Bool = true) {
+                bundlePath: String? = nil, memoryBytes: Int64 = 0, watts: Double? = nil, ownedByUser: Bool = true,
+                diskRate: Double? = nil, energyWh: Double? = nil) {
+        self.diskRate = diskRate
+        self.energyWh = energyWh
         self.id = id
         self.name = name
         self.memory = memory

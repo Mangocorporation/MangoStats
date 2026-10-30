@@ -10,6 +10,7 @@ nonisolated final class ProcessReader: @unchecked Sendable {
     private struct Usage {
         var cpuNanos: UInt64
         var energy: UInt64
+        var disk: UInt64
     }
 
     private var last: [Int32: Usage] = [:]
@@ -36,7 +37,9 @@ nonisolated final class ProcessReader: @unchecked Sendable {
             guard ok else { continue }
             // rusage times are in Mach absolute units; convert to nanoseconds.
             let usage = Usage(cpuNanos: UInt64(Double(info.ri_user_time + info.ri_system_time) * timebase),
-                              energy: info.ri_energy_nj)
+                              energy: info.ri_energy_nj, disk: info.ri_diskio_bytesread + info.ri_diskio_byteswritten)
+            // Energy since the process started, in joules (S-049).
+            samples[index].energy = Double(info.ri_energy_nj) / 1e9
             next[pid] = usage
             // rusage works only for this user's processes.
             samples[index].owned = true
@@ -45,6 +48,7 @@ nonisolated final class ProcessReader: @unchecked Sendable {
                 samples[index].cpu = Double(usage.cpuNanos - old.cpuNanos) / elapsed * 100
                 // Energy is in nanojoules (ri_energy_nj; billed energy barely moves): nJ per ns is watts.
                 samples[index].power = Double(usage.energy - old.energy) / elapsed
+                if usage.disk >= old.disk { samples[index].diskRate = Double(usage.disk - old.disk) / elapsed * 1e9 }
             }
         }
         last = next

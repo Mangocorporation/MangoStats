@@ -18,6 +18,7 @@ final class Sampler {
     fileprivate var lastPrune: Date?
     /// Alerts (S-032).
     fileprivate var alertEngine = AlertEngine()
+    private var lastHealthDay: Date?
     /// Free space goes through CacheDelete, which validates every volume:
     /// it was 56 % of the app's CPU at a 2 s refresh. It barely changes, so
     /// it is read every 30 s (S-023).
@@ -90,6 +91,10 @@ final class Sampler {
         if readDisk { disk = (reading.disk, reading.time) }
         let update = builder.update(reading, network: network, previous: model.status)
         record(update.point, retentionDays: model.historyDays)
+        if let battery = reading.battery, !Calendar.current.isDate(lastHealthDay ?? .distantPast, inSameDayAs: reading.time) {
+            lastHealthDay = reading.time
+            HistoryStore.shared.recordBatteryHealth(battery.health, on: reading.time)
+        }
         checkAlerts(reading, update, settings: model.alerts)
 
         // Fan control (S-025): send the wanted mode, then show what is applied.

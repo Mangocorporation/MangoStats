@@ -216,3 +216,26 @@ func historyPoint() {
     #expect(second.point?.download == 2_000)
     #expect(second.point?.battery == nil)
 }
+
+@Test("Battery details and disk activity")
+func batteryAndDisk() {
+    var builder = StatusBuilder(system: system)
+    let battery = BatteryReading(percent: 81, health: 100, charging: true, pluggedIn: true, charged: false,
+                                 adapterWatts: 65, minutesLeft: 60, cycleCount: 55, designCycles: 1000,
+                                 maxCapacity: 6305, designCapacity: 6249, voltage: 12.856, amperage: 2.691,
+                                 temperature: 30.51, adapterName: "67W USB-C Power Adapter")
+    var first = reading(at: 0, battery: battery)
+    first.disk = DiskReading(total: 500_000_000_000, free: 100_000_000_000, readBytes: 1_000_000, writtenBytes: 500_000)
+    let a = builder.update(first, network: NetworkContext(), previous: .placeholder).status
+    #expect(a.batteryCycles.hasPrefix("55 of 1"))
+    #expect(a.batteryCapacity.contains("mAh"))
+    #expect(a.batteryPower.hasPrefix("Charging at 35"))
+    #expect(a.batteryAdapter == "67W USB-C Power Adapter · 65 W")
+    #expect(a.batteryCondition == "Normal")
+    #expect(a.diskRead == "--")
+    var second = reading(at: 2, battery: battery)
+    second.disk = DiskReading(total: 500_000_000_000, free: 100_000_000_000, readBytes: 9_000_000, writtenBytes: 500_000)
+    let b = builder.update(second, network: NetworkContext(), previous: a).status
+    #expect(b.diskReadHistory == [4_000_000])
+    #expect(b.diskWrite == "<1 KB/s")
+}
