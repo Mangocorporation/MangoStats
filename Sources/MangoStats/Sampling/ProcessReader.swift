@@ -27,21 +27,21 @@ nonisolated final class ProcessReader: @unchecked Sendable {
         var next: [Int32: Usage] = [:]
         for index in samples.indices {
             let pid = samples[index].pid
-            var info = rusage_info_v4()
+            var info = rusage_info_v6()
             let ok = withUnsafeMutablePointer(to: &info) {
                 $0.withMemoryRebound(to: rusage_info_t?.self, capacity: 1) {
-                    proc_pid_rusage(pid, RUSAGE_INFO_V4, $0) == 0
+                    proc_pid_rusage(pid, RUSAGE_INFO_V6, $0) == 0
                 }
             }
             guard ok else { continue }
             // rusage times are in Mach absolute units; convert to nanoseconds.
             let usage = Usage(cpuNanos: UInt64(Double(info.ri_user_time + info.ri_system_time) * timebase),
-                              energy: info.ri_billed_energy)
+                              energy: info.ri_energy_nj)
             next[pid] = usage
             samples[index].memory = Int64(info.ri_phys_footprint)
             if elapsed > 0, let old = last[pid], usage.cpuNanos >= old.cpuNanos, usage.energy >= old.energy {
                 samples[index].cpu = Double(usage.cpuNanos - old.cpuNanos) / elapsed * 100
-                // Billed energy is in nanojoules: nJ per ns is watts.
+                // Energy is in nanojoules (ri_energy_nj; billed energy barely moves): nJ per ns is watts.
                 samples[index].power = Double(usage.energy - old.energy) / elapsed
             }
         }

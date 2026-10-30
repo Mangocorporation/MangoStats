@@ -162,7 +162,13 @@ Acceptance:
 - [snap] Health, CPU, GPU, Memory / Battery, Free space, Network, Fan, matching the reference layout.
 - [snap] The health card shows a reason line ("Disk space low · 99 GB Free") and the uptime.
 - [snap] The battery card shows "Top drain now <process>".
-Status: todo
+UX:
+- Flow: popover "Open MangoStats" button or ⌘1 while the popover is open -> Status window opens in front (or comes forward if already open) -> ⌘W or the close button closes it; the menu bar item keeps running
+- Surface: new window (a place people keep open beside their work)
+- States: before the first sample every value reads "--" in Ink.secondary; health reason "Measuring…"; a stat this Mac can't read hides its pill instead of showing "--"
+- Words: window title "MangoStats" (hidden, shown in Mission Control and the Window menu); card headers HEALTH, CPU, GPU, MEMORY, BATTERY, FREE SPACE, NETWORK, FAN; "Pressure normal"; "Top drain now <app>"
+- Access: VoiceOver reads each card as one element ("CPU, 15 percent, idle"); ⌘W closes
+Status: done
 
 ### S-011 Browse the process table
 As the user, I see every process with icon, name, memory, a CPU bar, % CPU, power and PID, and a count in the header ("NAME (156)").
@@ -171,7 +177,13 @@ Depends: S-008, S-010
 Acceptance:
 - [snap] Columns match the reference; an orange left marker on rows above 20 % CPU.
 - [unit] The power column comes from `proc_pid_rusage` energy deltas; "--" when unavailable.
-Status: todo
+UX:
+- Flow: Status window -> table lists every process, refreshed every 2 s, rows keep their place unless the rank really changes
+- Surface: inline table in the Status window
+- States: before the first read "Reading processes…" row; long names truncate in the middle with the full name in a tooltip; 500+ rows scroll smoothly (lazy rows)
+- Words: header "NAME (156)", "MEM", "% CPU", "PWR", "PID"; power in watts with one decimal, "--" for other users' processes; tooltip on PWR "Power in watts. -- for processes of other users."
+- Access: the hot marker is paired with a bold hot-colored value, so it never rests on color alone; VoiceOver "Google Chrome, 18.5 gigabytes, 47.7 percent CPU, 42.8 watts"
+Status: done
 
 ### S-012 Sort the process table
 As the user, I click a column header to sort by it; clicking again flips the order.
@@ -180,6 +192,12 @@ Depends: S-011
 Acceptance:
 - [unit] Sort works on name, memory, CPU, power and PID in both directions.
 - [snap] The active header shows a small arrow.
+UX:
+- Flow: click a column header -> sorts by it, largest first (names A–Z) -> click again flips -> arrow shows the order
+- Surface: inline (header buttons change one value on screen)
+- States: default sort Memory, largest first; the order is kept while the window stays open
+- Words: tooltips "Sort by memory", "Sort by % CPU", "Sort by power", "Sort by PID", "Sort by name"
+- Access: headers are buttons; VoiceOver "Sort by memory, sorted descending"
 Status: todo
 
 ### S-013 Search processes
@@ -189,6 +207,12 @@ Depends: S-011
 Acceptance:
 - [unit] The filter is case-insensitive and matches a PID exactly.
 - [snap] The search field replaces the magnifier in the header; Escape clears it.
+UX:
+- Flow: ⌘F or the magnifier -> search field replaces the magnifier, focused -> type to filter by name, or an exact PID -> Escape clears and closes the field
+- Surface: inline field in the table header (changes one value on screen)
+- States: no match -> one row "No processes match "<text>"" ; the count in the header shows matches ("NAME (3 of 156)")
+- Words: placeholder "Name or PID"; magnifier tooltip "Filter processes by name or PID (⌘F)"
+- Access: the field gets focus on ⌘F; Escape clears; VoiceOver "Search processes"
 Status: todo
 
 ### S-014 Quit a process from its row menu
@@ -198,6 +222,12 @@ Depends: S-011
 Acceptance:
 - [self] Quit sends SIGTERM; Force Quit asks for confirmation, then sends SIGKILL.
 - [manual] System processes the user doesn't own show Quit disabled with a tooltip explaining why.
+UX:
+- Flow: click `…` on a row or Control-click the row -> menu: Quit, Force Quit…, Show in Activity Monitor, Copy PID -> Quit asks the app to quit (it can still ask to save) -> Force Quit… shows a confirmation, then ends it at once
+- Surface: menu on the row (a few related actions); confirmation dialog for Force Quit (destroys unsaved work, cannot be undone)
+- States: processes owned by another user (WindowServer, root daemons) -> Quit and Force Quit disabled, menu note "Owned by another user"; a quit that fails -> the row stays, nothing else
+- Words: "Quit <name>", "Force Quit <name>…", dialog title "Force Quit <name>?", message "Unsaved changes in <name> will be lost.", buttons "Force Quit" and "Cancel"; "Show in Activity Monitor", "Copy PID"
+- Access: Return confirms, Escape cancels the dialog; the menu works from the keyboard
 Status: todo
 
 ## M3 Sensors

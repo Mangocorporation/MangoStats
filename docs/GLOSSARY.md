@@ -27,3 +27,13 @@
 | Open MangoStats | Opens the Status window | show dashboard |
 | Settings… | Opens the Settings window (⌘,) | preferences, options |
 | Quit MangoStats | Quits the app (⌘Q) | exit, close |
+| Power | A process's energy use in watts (PWR column) | energy impact, drain |
+| Top drain | The app using the most CPU now, shown on the Battery card | battery hog |
+| Hot | A process over 20 % CPU: orange marker and value | high, busy |
+| Sort by <column> | Order the process table by that column | order, arrange |
+| Name or PID | What the process search matches | filter, query |
+| Quit <name> | Ask a process to quit; it may ask to save | close, end, kill |
+| Force Quit <name>… | End a process at once; unsaved work is lost | kill, terminate |
+| Show in Activity Monitor | Open Activity Monitor | inspect |
+| Copy PID | Put the process ID on the clipboard | copy ID |
+| Owned by another user | Why Quit is unavailable for system processes | permission denied |
