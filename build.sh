@@ -29,6 +29,14 @@ bin="$scratch/$config/$name"
 # swift build can report success while an edited file failed to compile. Catch that.
 stale=$(find "$here/Sources" -name '*.swift' -newer "$bin" | head -1)
 if [[ -n "$stale" ]]; then
+  # SwiftPM can skip a file whose compiled output it thinks is current (a rewrite that kept
+  # the same contents, a comment-only edit). Touch the newer files and build once more;
+  # only a binary that is still older means a file really failed to compile.
+  find "$here/Sources" -name '*.swift' -newer "$bin" -exec touch {} +
+  swift build -c $config --package-path "$here" --scratch-path "$scratch" 2>&1 | grep -E "error|warning" | grep -v "^\[" || true
+  stale=$(find "$here/Sources" -name '*.swift' -newer "$bin" | head -1)
+fi
+if [[ -n "$stale" ]]; then
   echo "build failed: binary is older than $stale"
   swift build -c $config --package-path "$here" --scratch-path "$scratch" 2>&1 | grep -E "error" | head -20
   exit 1
