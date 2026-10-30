@@ -21,6 +21,8 @@ struct MenuBarLabel: View {
         }
         .task {
             model.startSampling()
+            Notifier.shared.model = model
+            Notifier.shared.openStatus = { openWindow(id: "status") }
             Profile.start(model: model, openWindow: openWindow)
         }
         .accessibilityLabel(MenuBarImage.spoken(stats: stats, values: model.menuValues))

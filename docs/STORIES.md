@@ -425,11 +425,59 @@ UX:
 - Words: "History", "Keep history for", "7 days", "30 days", "90 days", "Clear History…", footer "Stored only on this Mac, about 1 MB per week."
 Status: done
 
+## M8 Alerts
+
+Decided by the agent: macOS notifications; a master "Show alerts" switch asks for permission when
+turned on; each rule fires once per episode and at most every 30 minutes.
+
+### S-031 Turn on alerts
+As the user, I turn on "Show alerts" in Settings → Alerts and allow notifications.
+Screens: settings-alerts
+Acceptance:
+- [manual] Turning the switch on asks macOS for notification permission; denied shows "Notifications are off for MangoStats." with "Open Notification Settings…".
+- [self] Alerts are off by default; nothing asks for permission at launch.
+- [manual] "Send Test Alert" shows a notification at once.
+UX:
+- Flow: Settings → Alerts → "Show alerts" on → macOS permission prompt → Allow → rules below turn active
+- Surface: Settings tab (a place people come back to)
+- States: off (rules dimmed); on + allowed; on + denied (inline message and button); permission checked again every 2 s while the tab is open
+- Words: tab "Alerts"; "Show alerts"; "Send Test Alert"; "Open Notification Settings…"
+Status: todo
+
+### S-032 Get an alert when something needs attention
+As the user, I get one notification when memory pressure turns critical, the CPU runs hot or busy, disk space runs low, the battery runs low, or one app hogs the CPU.
+Depends: S-031
+Acceptance:
+- [unit] Each rule fires after its condition holds for its time (temperature 1 min, CPU busy 5 min, busy app 5 min; the others at once).
+- [unit] A rule fires once per episode: not again until the condition clears (with a margin) and returns, and at most every 30 minutes.
+- [unit] Alert words name the value and the top app: "CPU is hot: 93°C" / "Above 90°C for a minute. Top CPU: Google Chrome."
+- [self] With the busy-app rule on and nothing open, processes are read once a minute.
+UX:
+- Words: titles "Memory pressure is critical", "CPU is hot: 93°C", "CPU busy for 5 minutes", "Disk space low: 8 GB free", "Battery at 20 %", "Google Chrome is using 180 % CPU"; bodies say what it means and one next step, no blame
+Status: done
+
+### S-033 Open MangoStats from an alert
+As the user, I click an alert and the Status window opens.
+Depends: S-032
+Acceptance:
+- [manual] Clicking a notification opens the Status window in front; a busy-app alert also filters the process table to that app.
+Status: todo
+
+### S-034 Choose which alerts and when
+As the user, I turn each alert on or off and set its threshold in Settings → Alerts.
+Screens: settings-alerts
+Depends: S-031
+Acceptance:
+- [unit] Settings save and load; unknown values fall back to defaults.
+- [snap] One row per rule: switch, name, threshold picker (90 / 95 °C; 80 / 90 %; 5 / 10 / 20 GB; 10 / 20 %; 50 / 80 / 100 % CPU).
+UX:
+- Words: "Memory pressure is critical", "CPU temperature above", "CPU busy above", "Disk space below", "Battery below", "An app uses more than"; footer "Each alert shows once, then waits until the problem clears. At most every 30 minutes."
+Status: done
+
 ## Dropped
 - Clean, Apps, Optimize, Analyze tabs: another app's job (MangoCleaner).
 - "Cleaned / Uninstalled / Optimized" counters: belong to cleaning, not stats.
 - The reference app's upgrade button: vendor-only.
 
 ## Later
-- Alerts (e.g. memory pressure critical).
 - iCloud sync of settings.

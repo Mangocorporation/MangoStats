@@ -74,6 +74,11 @@ final class AppModel {
         }
     }
 
+    /// Settings → Alerts (S-031, S-034).
+    var alerts: AlertSettings {
+        didSet { Store.defaults.set(alerts.encoded, forKey: "alerts") }
+    }
+
     var menuBarStyle: MenuBarStyle {
         didSet { Store.defaults.set(menuBarStyle.rawValue, forKey: "menuBar.style") }
     }
@@ -87,6 +92,7 @@ final class AppModel {
         let defaults = Store.defaults
         menuBar = MenuBarLayout(encodedOrder: defaults.string(forKey: "menuBar.order"),
                                 encodedEnabled: defaults.string(forKey: "menuBar.enabled"))
+        alerts = AlertSettings.decode(defaults.data(forKey: "alerts"))
         let days = defaults.integer(forKey: "history.days")
         historyDays = HistoryRetention.choices.contains(days) ? days : HistoryRetention.defaultDays
         let interval = defaults.integer(forKey: "sampler.interval")

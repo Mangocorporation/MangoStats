@@ -37,6 +37,8 @@ Sampler (app, @MainActor): every 2 s, reads off the main thread,     AppModel.st
 - History (M7): `StatusUpdate.point` -> `MinuteAggregator` (Kit) in the Sampler -> `HistoryStore`
   (SQLite, own serial queue, `history.sqlite` in Application Support; `<APP_STORE>-history.sqlite` in
   test runs). `HistoryView` reads it and downsamples with `HistoryRange` (Kit).
+- Alerts (M8): the Sampler builds an `AlertInput` per sample; `AlertEngine` (Kit, tested) decides;
+  `Notifier` posts through UNUserNotificationCenter and opens the Status window on click.
 - Snapshot runs skip the sampler and show `StatusData.sample` (app target), unless `APP_LIVE=1`.
 
 ## App folders

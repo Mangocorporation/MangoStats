@@ -49,3 +49,7 @@
 | Hour / Day / Week / Month | The time range shown on the History page | period, span |
 | Keep history for | How long recorded stats are kept | retention |
 | Clear History… | Delete all recorded stats | reset, wipe |
+| Alert | A macOS notification MangoStats shows when a rule's condition holds | warning, notification (in UI) |
+| Show alerts | The master switch for all alerts | enable notifications |
+| Busy app | One app using more CPU than its threshold for 5 minutes | hog, runaway |
+| Send Test Alert | Show a sample alert now | test notification |

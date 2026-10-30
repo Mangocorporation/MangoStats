@@ -27,6 +27,7 @@ struct SettingsView: View {
             switch tab {
             case .general: GeneralSettings()
             case .menuBar: MenuBarSettings()
+            case .alerts: AlertSettingsView()
             case .appearance: AppearanceSettings()
             }
         }
@@ -38,7 +39,7 @@ struct SettingsView: View {
 
 /// The Settings tabs. Snapshot mode walks through every case.
 enum SettingsTab: String, CaseIterable, Identifiable {
-    case general, menuBar, appearance
+    case general, menuBar, alerts, appearance
 
     var id: String { rawValue }
 
@@ -46,6 +47,7 @@ enum SettingsTab: String, CaseIterable, Identifiable {
         switch self {
         case .general: "General"
         case .menuBar: "Menu Bar"
+        case .alerts: "Alerts"
         case .appearance: "Appearance"
         }
     }
@@ -54,6 +56,7 @@ enum SettingsTab: String, CaseIterable, Identifiable {
         switch self {
         case .general: "gearshape"
         case .menuBar: "menubar.rectangle"
+        case .alerts: "bell.badge"
         case .appearance: "paintpalette"
         }
     }
@@ -102,6 +105,73 @@ struct GeneralSettings: View {
             loginError = "Unable to change the login item: \(error.localizedDescription)"
         }
         openAtLogin = LoginItem.isEnabled
+    }
+}
+
+/// Settings → Alerts: the master switch, permission, and one row per rule (S-031, S-034).
+struct AlertSettingsView: View {
+    @Environment(AppModel.self) private var model
+    private var notifier = Notifier.shared
+    private let timer = Timer.publish(every: 2, tolerance: 0.5, on: .main, in: .common).autoconnect()
+
+    var body: some View {
+        @Bindable var model = model
+        Section {
+            Toggle("Show alerts", isOn: Binding(get: { model.alerts.showAlerts }, set: { on in
+                model.alerts.showAlerts = on
+                if on { notifier.requestPermission() }
+            }))
+            if model.alerts.showAlerts && notifier.permission == .denied {
+                HStack {
+                    Text("Notifications are off for MangoStats.").foregroundStyle(.secondary)
+                    Spacer()
+                    Button("Open Notification Settings…") { Notifier.openNotificationSettings() }
+                }
+            } else if model.alerts.showAlerts {
+                HStack {
+                    Spacer()
+                    Button("Send Test Alert") { notifier.sendTest() }
+                }
+            }
+        }
+        Section {
+            ForEach(AlertKind.allCases) { kind in
+                AlertRuleRow(kind: kind)
+            }
+        } footer: {
+            Text("Each alert shows once, then waits until the problem clears. At most every 30 minutes.")
+                .foregroundStyle(.secondary)
+        }
+        .disabled(!model.alerts.showAlerts)
+        // People allow notifications in System Settings; check again while this tab is open.
+        .onReceive(timer) { _ in notifier.refresh() }
+    }
+}
+
+private struct AlertRuleRow: View {
+    @Environment(AppModel.self) private var model
+    let kind: AlertKind
+
+    var body: some View {
+        let on = model.alerts.enabled.contains(kind)
+        HStack {
+            Text(kind.title)
+            Spacer()
+            if !kind.choices.isEmpty {
+                Picker(kind.title, selection: Binding(get: { model.alerts.threshold(kind) },
+                                                      set: { model.alerts.thresholds[kind] = $0 })) {
+                    ForEach(kind.choices, id: \.self) { Text(kind.label($0)).tag($0) }
+                }
+                .labelsHidden()
+                .fixedSize()
+                .disabled(!on)
+            }
+            Toggle(kind.title, isOn: Binding(get: { on }, set: { enabled in
+                if enabled { model.alerts.enabled.insert(kind) } else { model.alerts.enabled.remove(kind) }
+            }))
+            .labelsHidden()
+            .toggleStyle(.switch)
+        }
     }
 }
 

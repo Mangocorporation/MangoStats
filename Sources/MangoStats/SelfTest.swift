@@ -111,6 +111,20 @@ enum SelfTest {
             check("Clear History empties the database", await reopened.minutes(since: .distantPast).isEmpty)
             check("test runs use a history file in /tmp", HistoryStore.defaultURL.path.hasPrefix("/tmp/"))
 
+            // S-031 to S-034: alerts.
+            check("alerts are off by default", AppModel().alerts.showAlerts == false)
+            var alerts = model.alerts
+            alerts.showAlerts = true
+            alerts.thresholds[.cpuHot] = 95
+            model.alerts = alerts
+            check("alert settings survive a restart", AppModel().alerts == alerts)
+            model.popoverOpen = false
+            model.status.processes = []
+            try? await Task.sleep(for: .seconds(2.5))
+            check("the busy-app alert reads processes with nothing open", !model.status.processes.isEmpty)
+            model.alerts = AlertSettings()
+            model.popoverOpen = true
+
             // S-014: Quit ends a process of this user.
             let child = Process()
             child.executableURL = URL(fileURLWithPath: "/bin/sleep")

@@ -16,6 +16,8 @@ final class Sampler {
     /// History (S-027): minutes are averaged here and written once a minute.
     fileprivate var minutes = MinuteAggregator()
     fileprivate var lastPrune: Date?
+    /// Alerts (S-032).
+    fileprivate var alertEngine = AlertEngine()
     /// Free space goes through CacheDelete, which validates every volume:
     /// it was 56 % of the app's CPU at a 2 s refresh. It barely changes, so
     /// it is read every 30 s (S-023).
@@ -69,7 +71,11 @@ final class Sampler {
     private func sample() async {
         guard let model else { return }
         // Processes cost the most to read: at most every 2 s, and only while someone looks (S-021, S-023).
-        let wantProcesses = model.detailVisible && SampleSchedule.readProcesses(now: .now, last: lastProcessRead)
+        // The busy-app alert needs processes with nothing open: once a minute is enough for a 5-minute rule.
+        let alertNeedsProcesses = model.alerts.isOn(.busyApp)
+            && lastProcessRead.map { Date.now.timeIntervalSince($0) >= 60 } ?? true
+        let wantProcesses = (model.detailVisible && SampleSchedule.readProcesses(now: .now, last: lastProcessRead))
+            || alertNeedsProcesses
         if wantProcesses { lastProcessRead = .now }
         let reader = processReader
         let sensors = sensorReader
@@ -84,6 +90,7 @@ final class Sampler {
         if readDisk { disk = (reading.disk, reading.time) }
         let update = builder.update(reading, network: network, previous: model.status)
         record(update.point, retentionDays: model.historyDays)
+        checkAlerts(reading, update, settings: model.alerts)
 
         // Fan control (S-025): send the wanted mode, then show what is applied.
         FanControl.shared.tick()
@@ -98,6 +105,17 @@ final class Sampler {
 
 
 extension Sampler {
+    fileprivate func checkAlerts(_ reading: Reading, _ update: StatusUpdate, settings: AlertSettings) {
+        guard settings.showAlerts else { return }
+        let processes = update.status.processes
+        let topCPU = processes.max { $0.cpu < $1.cpu }.map { (name: $0.name, cpu: $0.cpu) }
+        let input = AlertInput(time: reading.time, cpu: update.point?.cpu, pressure: reading.memory.pressure,
+                               cpuTemperature: reading.sensors.cpuTemperature, diskFree: reading.disk?.free,
+                               battery: reading.battery.map { ($0.percent, !$0.pluggedIn, $0.minutesLeft) },
+                               topCPU: topCPU, topMemory: processes.first?.name)
+        for event in alertEngine.evaluate(input, settings: settings) { Notifier.shared.post(event) }
+    }
+
     fileprivate func record(_ point: MinuteSample?, retentionDays: Int) {
         guard let point else { return }
         if let minute = minutes.add(point) { HistoryStore.shared.insert(minute) }
