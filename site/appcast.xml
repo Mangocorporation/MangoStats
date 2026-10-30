@@ -10,6 +10,28 @@
     <language>en</language>
     <!-- releases, newest first -->
     <item>
+      <title>MangoStats 1.4</title>
+      <pubDate>Fri, 30 Oct 2026 19:54:36 GMT</pubDate>
+      <sparkle:version>202610301654</sparkle:version>
+      <sparkle:shortVersionString>1.4</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
+      <sparkle:fullReleaseNotesLink>https://github.com/Mangocorporation/MangoStats/releases/tag/v1.4</sparkle:fullReleaseNotesLink>
+      <description sparkle:format="markdown"><![CDATA[
+Which apps use your network, a Hardware tab, and MangoStats in Portuguese.
+
+## New
+
+- **Apps using the network:** the Network tab lists each app's download, upload, and traffic this session. When one app takes most of your bandwidth, MangoStats names it: "Dropbox is uploading at 4.2 MB/s".
+- **Hardware tab** (⌘4): battery health, cycles, capacity, charging or discharging watts, temperature, and charger, with health over time (one point a day). Also the energy each app used since it started, and the disk's live read and write speeds with the apps behind them.
+- **Português (Brasil):** every word in the menu bar, window, Settings, and alerts follows your Mac's language.
+
+## Changed
+
+- About moved to ⌘5.
+]]></description>
+      <enclosure url="https://github.com/Mangocorporation/MangoStats/releases/download/v1.4/MangoStats-1.4.zip" type="application/octet-stream" sparkle:edSignature="GGFFq1yC+NL99IGgaVIKdgUI1TkPvCJVIEuxGGfxKsDBo4ZbVbSW2lBRwyxrL7VpRIFn3vCe3fzerQ+J5B7JCw==" length="5027089"/>
+    </item>
+    <item>
       <title>MangoStats 1.3</title>
       <pubDate>Fri, 30 Oct 2026 19:19:20 GMT</pubDate>
       <sparkle:version>202610301618</sparkle:version>
