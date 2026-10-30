@@ -1,0 +1,99 @@
+import Foundation
+
+// What the system readers return (Sources/MangoStats/Sampling/Readers.swift).
+// Plain values, so StatusBuilder can be tested with made-up readings.
+
+public struct MemoryReading: Sendable {
+    public var total: Int64
+    /// App memory + wired + compressed, like Activity Monitor's "Memory Used".
+    public var used: Int64
+    public var swap: Int64
+    public var pressure: MemoryPressure
+
+    public init(total: Int64, used: Int64, swap: Int64, pressure: MemoryPressure) {
+        self.total = total
+        self.used = used
+        self.swap = swap
+        self.pressure = pressure
+    }
+}
+
+public struct DiskReading: Sendable {
+    public var total: Int64
+    /// Includes purgeable space, like Finder (S-005).
+    public var free: Int64
+
+    public init(total: Int64, free: Int64) {
+        self.total = total
+        self.free = free
+    }
+}
+
+public struct BatteryReading: Sendable {
+    public var percent: Int
+    public var health: Int
+    public var charging: Bool
+    public var pluggedIn: Bool
+    public var charged: Bool
+    public var adapterWatts: Int?
+    /// Minutes to full or to empty; nil while macOS is still estimating.
+    public var minutesLeft: Int?
+
+    public init(percent: Int, health: Int, charging: Bool, pluggedIn: Bool, charged: Bool,
+                adapterWatts: Int?, minutesLeft: Int?) {
+        self.percent = percent
+        self.health = health
+        self.charging = charging
+        self.pluggedIn = pluggedIn
+        self.charged = charged
+        self.adapterWatts = adapterWatts
+        self.minutesLeft = minutesLeft
+    }
+}
+
+public struct SystemInfo: Sendable {
+    public var chip: String
+    public var memory: Int64
+    public var macOS: String
+    public var boot: Date
+
+    public init(chip: String, memory: Int64, macOS: String, boot: Date) {
+        self.chip = chip
+        self.memory = memory
+        self.macOS = macOS
+        self.boot = boot
+    }
+}
+
+/// One read of the whole system.
+public struct Reading: Sendable {
+    public var ticks: [CPUTicks]
+    public var memory: MemoryReading
+    public var disk: DiskReading?
+    public var network: NetworkCounters
+    public var battery: BatteryReading?
+    /// nil when nobody looks at processes (popover and window closed).
+    public var processes: [ProcessSample]?
+    public var time: Date
+
+    public init(ticks: [CPUTicks], memory: MemoryReading, disk: DiskReading?, network: NetworkCounters,
+                battery: BatteryReading?, processes: [ProcessSample]?, time: Date) {
+        self.ticks = ticks
+        self.memory = memory
+        self.disk = disk
+        self.network = network
+        self.battery = battery
+        self.processes = processes
+        self.time = time
+    }
+}
+
+public struct NetworkCounters: Sendable, Equatable {
+    public var received: UInt64
+    public var sent: UInt64
+
+    public init(received: UInt64, sent: UInt64) {
+        self.received = received
+        self.sent = sent
+    }
+}

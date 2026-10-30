@@ -1,4 +1,5 @@
 import SwiftUI
+import MangoStatsKit
 
 /// Small grey tag on a card: "45°C", "Wi-Fi", "100% Health" (design/KIT.md, Pill).
 struct KitPill: View {

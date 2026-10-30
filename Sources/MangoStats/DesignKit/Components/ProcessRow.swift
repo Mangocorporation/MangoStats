@@ -1,19 +1,6 @@
 import AppKit
 import SwiftUI
-
-/// What a process row shows. Formatting happens before the row.
-struct ProcessRowData: Identifiable, Hashable {
-    let id: Int32
-    let name: String
-    let memory: String
-    let cpu: Double
-    let cpuText: String
-    let power: String
-    var bundlePath: String?
-
-    /// Over 20 % CPU the row is marked hot (design/KIT.md, Process row).
-    var hot: Bool { cpu >= 20 }
-}
+import MangoStatsKit
 
 /// The Status window's process table header.
 struct ProcessTableHeader: View {

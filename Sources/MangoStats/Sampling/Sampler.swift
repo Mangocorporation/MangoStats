@@ -2,17 +2,6 @@ import Foundation
 import Network
 import MangoStatsKit
 
-/// One read of the system, made off the main thread.
-nonisolated private struct Reading: Sendable {
-    var ticks: [CPUTicks]
-    var memory: MemoryReading
-    var disk: DiskReading?
-    var network: (received: UInt64, sent: UInt64)
-    var battery: BatteryReading?
-    var processes: [ProcessSample]?
-    var time: Date
-}
-
 /// Reads the system every `interval` seconds and fills `AppModel.status`
 /// and the menu bar values (S-001 to S-008).
 @MainActor

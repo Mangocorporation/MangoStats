@@ -1,4 +1,5 @@
 import SwiftUI
+import MangoStatsKit
 
 /// Where a card sits: the Status window uses uppercase tracked headers,
 /// the popover uses sentence-case headers and shorter cards.

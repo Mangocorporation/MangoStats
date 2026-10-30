@@ -28,14 +28,6 @@ nonisolated enum CPUReader {
     }
 }
 
-nonisolated struct MemoryReading: Sendable {
-    var total: Int64
-    /// App memory + wired + compressed, like Activity Monitor's "Memory Used".
-    var used: Int64
-    var swap: Int64
-    var pressure: MemoryPressure
-}
-
 nonisolated enum MemoryReader {
     static func read() -> MemoryReading {
         let total = Int64(ProcessInfo.processInfo.physicalMemory)
@@ -63,12 +55,6 @@ nonisolated enum MemoryReader {
     }
 }
 
-nonisolated struct DiskReading: Sendable {
-    var total: Int64
-    /// Includes purgeable space, like Finder (S-005).
-    var free: Int64
-}
-
 nonisolated enum DiskReader {
     static func read() -> DiskReading? {
         let keys: Set<URLResourceKey> = [.volumeAvailableCapacityForImportantUsageKey, .volumeTotalCapacityKey]
@@ -82,12 +68,12 @@ nonisolated enum DiskReader {
 nonisolated enum NetworkReader {
     /// Received and sent bytes on every interface that is up, except loopback (S-006).
     /// Reads the 64-bit counters (NET_RT_IFLIST2), which don't wrap at 4 GB.
-    static func counters() -> (received: UInt64, sent: UInt64) {
+    static func counters() -> NetworkCounters {
         var mib: [Int32] = [CTL_NET, PF_ROUTE, 0, 0, NET_RT_IFLIST2, 0]
         var length = 0
-        guard sysctl(&mib, 6, nil, &length, nil, 0) == 0, length > 0 else { return (0, 0) }
+        guard sysctl(&mib, 6, nil, &length, nil, 0) == 0, length > 0 else { return NetworkCounters(received: 0, sent: 0) }
         var buffer = [UInt8](repeating: 0, count: length)
-        guard sysctl(&mib, 6, &buffer, &length, nil, 0) == 0 else { return (0, 0) }
+        guard sysctl(&mib, 6, &buffer, &length, nil, 0) == 0 else { return NetworkCounters(received: 0, sent: 0) }
         var received: UInt64 = 0
         var sent: UInt64 = 0
         var offset = 0
@@ -106,19 +92,8 @@ nonisolated enum NetworkReader {
                 offset += Int(header.ifm_msglen)
             }
         }
-        return (received, sent)
+        return NetworkCounters(received: received, sent: sent)
     }
-}
-
-nonisolated struct BatteryReading: Sendable {
-    var percent: Int
-    var health: Int
-    var charging: Bool
-    var pluggedIn: Bool
-    var charged: Bool
-    var adapterWatts: Int?
-    /// Minutes to full or to empty; nil while macOS is still estimating.
-    var minutesLeft: Int?
 }
 
 nonisolated enum BatteryReader {
@@ -151,12 +126,7 @@ nonisolated enum BatteryReader {
     }
 }
 
-nonisolated struct SystemInfo: Sendable {
-    var chip: String
-    var memory: Int64
-    var macOS: String
-    var boot: Date
-
+nonisolated extension SystemInfo {
     static func read() -> SystemInfo {
         var size = 0
         sysctlbyname("machdep.cpu.brand_string", nil, &size, nil, 0)

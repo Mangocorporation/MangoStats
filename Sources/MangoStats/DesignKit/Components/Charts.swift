@@ -1,4 +1,5 @@
 import SwiftUI
+import MangoStatsKit
 
 /// CPU history: the last samples as bars, newest on the right (design/KIT.md, Bar history).
 /// Values are 0…1.

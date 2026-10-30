@@ -1,4 +1,5 @@
 import SwiftUI
+import MangoStatsKit
 
 /// Every kit part in every state, like a storybook. Shown instead of the
 /// Status window when APP_KIT_GALLERY=1 (tools/snap.sh captures it).

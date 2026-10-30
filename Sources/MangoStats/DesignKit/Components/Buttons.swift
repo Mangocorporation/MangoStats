@@ -1,4 +1,5 @@
 import SwiftUI
+import MangoStatsKit
 
 /// Circle button with a progress ring, for the battery card (design/KIT.md, Ring button).
 struct RingButtonStyle: ButtonStyle {
