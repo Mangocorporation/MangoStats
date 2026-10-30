@@ -25,6 +25,7 @@ Menu bar extra (`MenuBarExtra`, window style) as the main surface, plus one Stat
 ## System hooks
 - Menu bar item whose content you configure: pick any of CPU, GPU, Memory, Disk, Network, Temperature, Fan, Battery; drag to reorder.
 - Launch at login (SMAppService).
+- Fan control (Auto / Cool / Max) through a root launch daemon in the bundle (SMAppService.daemon), added in M6.
 - Private reads: IOKit/SMC for temperatures and fan RPM, IOReport for GPU and power, `host_statistics`/`proc_pidinfo` for CPU, memory and processes. *(decided by the agent)*
 
 ## Reference
@@ -35,5 +36,4 @@ Its own look, not stock Apple. Dark warm brown/olive background, rounded translu
 
 ## Not in version one
 - Clean, Apps, Optimize and Analyze tabs, and the "Cleaned / Uninstalled / Optimized" counters.
-- Fan control: Cool and Max need a privileged SMC helper. v1 shows RPM and the Auto/Cool/Max buttons read-only ("Managed by macOS"). *(decided by the agent)*
 - History beyond the live session, alerts and notifications, and iCloud sync.

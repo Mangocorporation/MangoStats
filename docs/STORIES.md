@@ -336,7 +336,8 @@ UX:
 - States: Off "Fan control is off. Cool and Max need a helper that runs as root."; Needs approval "Allow MangoStats in System Settings > General > Login Items."; On "The helper can set the fan. It returns to Auto when MangoStats quits."; error inline with the reason
 - Words: "Fan control" section; buttons "Allow Fan Control…", "Open Login Items…", "Turn Off Fan Control"
 - Access: buttons reachable by Tab; VoiceOver reads the state line
-Status: todo
+Note: confirmed by hand on this M5 (approval with the Apple Development signature, Cool/Max/Auto, quit and force quit return to Auto).
+Status: done
 
 ### S-025 Pick Auto, Cool, or Max
 As the user, I click Cool or Max on the Fan card (window or popover) and the fan spins up; Auto gives control back to macOS.
@@ -353,7 +354,7 @@ UX:
 - States: helper missing → Cool/Max disabled with tooltip; helper error → note "Unable to set the fan: <reason>", selection returns to Auto
 - Words: "Auto", "Cool", "Max"; tooltips "Let macOS control the fan", "Run the fan at 60 % for cooler temperatures", "Run the fan at full speed"
 - Access: segments are buttons with the selected trait; VoiceOver "Fan mode Cool, selected"
-Status: todo
+Status: done
 
 ### S-026 The fan never stays forced
 As the user, I trust that a forced fan goes back to Auto when MangoStats isn't watching, and speeds up if the Mac gets hot.
@@ -364,7 +365,7 @@ Acceptance:
 - [self] Quitting MangoStats sets Auto before it exits.
 - [manual] Force quitting MangoStats returns the fan to Auto within 15 s.
 - [self] MangoStats always starts in Auto.
-Status: todo
+Status: done
 
 ## Dropped
 - Clean, Apps, Optimize, Analyze tabs: another app's job (MangoCleaner).
