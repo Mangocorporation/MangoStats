@@ -596,10 +596,145 @@ Acceptance:
 Note: verified with MangoMemory installed in /Applications.
 Status: done
 
+## M13 Which app is using the network (top 3, #1)
+
+### S-046 See each app's network traffic
+As the user, I see in the Network tab which apps are downloading and uploading right now, grouped by app like the process list.
+Screens: network
+Acceptance:
+- [probe] `nettop` (or another source) gives per-process bytes without root.
+- [unit] Per-process byte counters become per-app rates (bytes/s) between two reads; helpers count toward their app.
+- [snap] An "Apps using the network" card: app, ↓ rate, ↑ rate, total this session, sorted by total rate.
+Status: todo
+
+### S-047 Name the app behind heavy traffic
+As the user, when one app uses most of the bandwidth, the Network verdict and the Overview insight say so ("Dropbox is uploading at 4 MB/s").
+Depends: S-046
+Acceptance:
+- [unit] An app above 1 MB/s and over 60 % of the traffic for 30 s becomes an insight; it clears when it drops.
+Status: todo
+
+## M14 Battery and storage details (top 3, #2)
+
+### S-048 Battery details
+As the user, I see cycle count, health (max vs design capacity), condition, charge or discharge rate in watts, the charger (watts, name), battery temperature, and health over time.
+Screens: battery
+Acceptance:
+- [probe] AppleSmartBattery gives cycle count, voltage, amperage, temperature, adapter details without root.
+- [unit] Watts = volts × amps; health history kept one point a day.
+- [snap] A Battery page (or card set) with these rows and a health chart.
+Status: todo
+
+### S-049 Apps draining the battery
+As the user, on battery, I see which apps used the most energy in the last hour.
+Depends: S-048
+Acceptance:
+- [unit] Per-app energy (Wh) from the per-process energy counters, summed over the last hour.
+Status: todo
+
+### S-050 Disk activity and the apps behind it
+As the user, I see the startup disk's live read and write speed and which apps read or write the most.
+Acceptance:
+- [probe] Disk throughput from IOBlockStorageDriver statistics; per-process bytes from proc_pid_rusage (ri_diskio_bytes*).
+- [unit] Rates from counter deltas; per-app grouping.
+- [snap] Storage card shows ↓ read / ↑ write; a "Disk activity" list of apps.
+Status: todo
+
+## M15 Portuguese (top 3, #3)
+
+### S-051 MangoStats in Brazilian Portuguese
+As a Portuguese-speaking user, every word in the menu bar, popover, window, Settings, alerts, and insights appears in Portuguese when my Mac is set to Portuguese.
+Acceptance:
+- [unit] Insight, verdict, and alert sentences come from the String Catalog in both languages.
+- [snap] Every page snapshotted in pt-BR (APP_LANGUAGE=pt-BR); no English left, no clipped text.
+- [manual] The glossary has a pt-BR column, so the same thing always has the same name.
+Status: todo
+
+## M16 Network tab, round two
+
+### S-052 Network history
+As the user, I see router and internet latency, loss, and outages over time in History.
+Acceptance:
+- [unit] Latency samples average into the minute rows (new columns); outages from the outages table.
+Status: todo
+
+### S-053 Network alerts
+As the user, I get an alert when the internet goes down and when it's back, when Wi-Fi turns weak, or when packet loss stays high.
+Acceptance:
+- [unit] New AlertKinds with sustain times and episodes, like M8.
+Status: todo
+
+### S-054 Wi-Fi channel advice
+As the user, I see how crowded each Wi-Fi channel is nearby and which one would be better.
+Acceptance:
+- [probe] CoreWLAN scan with Location permission.
+- [unit] Channel crowding score from nearby networks' RSSI and overlap; suggestion only when clearly better.
+Status: todo
+
+### S-055 A network report to share
+As the user, I export the verdict, path, latency, loss, and speed tests as a PDF or text for my ISP's support.
+Acceptance:
+- [snap] "Export Report…" saves a one-page PDF with no device names or MAC addresses unless I choose to include them.
+Status: todo
+
+## M17 Deeper hardware
+
+### S-056 Sensors page
+As the user, I see every temperature sensor (grouped: CPU, GPU, memory, battery, SSD, other) and the fan, live and over the last hour.
+Acceptance:
+- [unit] SMC key groups by prefix with readable names.
+Status: todo
+
+### S-057 Clock speed and throttling
+As the user, I see CPU and GPU clock speeds and whether macOS is slowing the Mac down to cool it.
+Acceptance:
+- [probe] IOReport CPU/GPU frequency channels; ProcessInfo.thermalState.
+- [unit] Throttling insight when thermal state is serious or critical.
+Status: todo
+
+## M18 Beyond the window
+
+### S-058 Widgets
+As the user, I add MangoStats widgets (CPU, memory, network, battery) to my desktop and Notification Center.
+Acceptance:
+- Needs an Xcode project (widget extension) and an App Group to share data.
+Status: todo
+
+### S-059 Shortcuts actions
+As the user, I use "Get memory pressure", "Get CPU usage", and "Run speed test" in Shortcuts.
+Acceptance:
+- App Intents (needs the Xcode project from S-058).
+Status: todo
+
+### S-060 A command line for scripts and agents
+As a developer, I run `mangostats status --json` (and an MCP server) so scripts and AI agents can read my Mac's stats.
+Acceptance:
+- [self] The CLI talks to the running app; works when the app is closed by reading directly.
+Status: todo
+
+### S-061 Global shortcut
+As the user, I press a shortcut I choose (default ⌃⌥M is MangoMemory's, so ⌃⌥S) to open the popover from any app.
+Status: todo
+
+## M19 Polish
+
+### S-062 Export history
+As the user, I export History as CSV for the range I'm looking at.
+Status: todo
+
+### S-063 Richer menu bar
+As the user, I can show tiny sparklines next to menu bar values, color values that run hot, and show per-core CPU.
+Status: todo
+
+## M20 Sync
+
+### S-064 iCloud sync of settings
+As the user with two Macs, my settings follow me through iCloud Drive (one small JSON file, like MangoMemory).
+Status: todo
+
 ## Dropped
 - Clean, Apps, Optimize, Analyze tabs: another app's job (MangoCleaner).
 - "Cleaned / Uninstalled / Optimized" counters: belong to cleaning, not stats.
 - The reference app's upgrade button: vendor-only.
 
 ## Later
-- iCloud sync of settings.
