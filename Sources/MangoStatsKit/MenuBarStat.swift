@@ -19,20 +19,6 @@ public enum MenuBarStat: String, CaseIterable, Codable, Sendable, Identifiable {
         case .battery: "Battery"
         }
     }
-
-    /// SF Symbol shown before the value in the "Icon and Value" style.
-    public var symbol: String {
-        switch self {
-        case .cpu: "cpu"
-        case .gpu: "rectangle.3.group"
-        case .memory: "memorychip"
-        case .disk: "internaldrive"
-        case .network: "network"
-        case .temperature: "thermometer.medium"
-        case .fan: "fan"
-        case .battery: "battery.100percent"
-        }
-    }
 }
 
 /// How each stat shows in the menu bar.

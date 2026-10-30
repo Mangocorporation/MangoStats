@@ -76,7 +76,7 @@ struct MenuBarSettings: View {
             ForEach(model.menuBar.order) { stat in
                 Toggle(isOn: Binding(get: { model.menuBar.enabled.contains(stat) },
                                      set: { model.setShown(stat, $0) })) {
-                    Label(stat.title, systemImage: stat.symbol)
+                    Label(stat.title, systemImage: stat.icon.symbol)
                 }
                 .accessibilityLabel("Show \(stat.title) in menu bar")
             }

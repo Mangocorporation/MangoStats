@@ -10,12 +10,12 @@ struct MenuBarLabel: View {
         let stats = model.menuBar.visible
         if stats.isEmpty {
             // Never invisible: with every stat off, show the app's symbol.
-            Image(systemName: "chart.bar.xaxis")
+            KitIcon.chart.image
         } else {
             HStack(spacing: Space.xs) {
                 ForEach(stats) { stat in
                     if model.menuBarStyle == .iconAndValue {
-                        Image(systemName: stat.symbol)
+                        stat.icon.image
                     }
                     Text("--").monospacedDigit()
                 }
@@ -58,23 +58,5 @@ struct PopoverView: View {
         }
         .padding(Space.lg)
         .frame(width: 360)
-    }
-}
-
-/// The Status window. Cards and the process table arrive with S-010 to S-014.
-struct StatusView: View {
-    @Environment(AppModel.self) private var model
-    @Environment(\.openSettings) private var openSettings
-
-    var body: some View {
-        ContentUnavailableView("Status", systemImage: "chart.bar.xaxis",
-                               description: Text("Cards and the process table arrive in the next stories."))
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .navigationTitle("MangoStats")
-            .noInitialFocus()
-            .task {
-                SelfTest.runIfRequested(model: model)
-                Snapshot.runIfRequested(model: model, openSettings: openSettings)
-            }
     }
 }

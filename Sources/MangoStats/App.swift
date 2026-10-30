@@ -7,6 +7,8 @@ import SwiftUI
 //   APP_SNAPSHOT=<dir> MangoStats   save a PNG of the popover, every Status page, and every Settings tab in light and dark mode, then quit
 //   MangoStats --selftest           run the self-test and quit with 0 or 1 (tools/selftest.sh)
 //   APP_ACCENT=<id> MangoStats      run with another accent from Theme.all (UI/Theme.swift)
+//   APP_SAMPLE=1 MangoStats        show the reference values instead of "--" (until the samplers exist)
+//   APP_KIT_GALLERY=1 MangoStats   show the design kit gallery in the Status window
 //   APP_GRID=1 MangoStats           draw the grid and the layout probes over the window
 
 @main
@@ -35,9 +37,11 @@ struct MangoStatsApp: App {
                 .environment(model)
                 .themed()
                 .overlay { if GridOverlay.enabled { GridOverlay() } }
-                .frame(minWidth: 960, minHeight: 600)
+                .frame(minWidth: Metric.windowMinWidth, minHeight: Metric.windowMinHeight)
         }
-        .defaultSize(width: 1200, height: 760)
+        .windowStyle(.hiddenTitleBar)
+        .defaultSize(width: Metric.windowWidth, height: Metric.windowHeight)
+        .restorationBehavior(.disabled)
         .defaultLaunchBehavior(Self.automated ? .presented : .suppressed)
 
         Settings {

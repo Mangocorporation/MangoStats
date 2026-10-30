@@ -31,6 +31,8 @@ enum Page: String, CaseIterable, Identifiable {
 @Observable
 final class AppModel {
     var page: Page = .status
+    /// What the cards and tables show. The samplers replace it (S-001 and on).
+    var status: StatusData = .initial
 
     /// Which stats show in the menu bar, in order (S-009).
     var menuBar: MenuBarLayout {
