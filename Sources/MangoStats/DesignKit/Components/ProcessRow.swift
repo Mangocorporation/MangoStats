@@ -51,6 +51,8 @@ struct ProcessRow: View {
         }
         .frame(height: Metric.rowHeight)
         .background(hover ? Ink.rowHover : .clear)
+        .contentShape(Rectangle())
+        .contextMenu { menu() }
         .onHover { hovering = $0 }
         .animation(Motion.hover, value: hover)
         .accessibilityElement(children: .combine)

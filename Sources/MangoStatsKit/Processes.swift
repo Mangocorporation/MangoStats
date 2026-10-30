@@ -9,13 +9,16 @@ public struct ProcessSample: Equatable, Sendable {
     public var cpu: Double
     /// Watts, nil when the process belongs to another user.
     public var power: Double?
+    /// True when the process belongs to this user, so it can be quit (S-014).
+    public var owned: Bool
 
-    public init(pid: Int32, path: String, memory: Int64, cpu: Double, power: Double?) {
+    public init(pid: Int32, path: String, memory: Int64, cpu: Double, power: Double?, owned: Bool = false) {
         self.pid = pid
         self.path = path
         self.memory = memory
         self.cpu = cpu
         self.power = power
+        self.owned = owned
     }
 }
 
@@ -30,6 +33,8 @@ public struct ProcessGroup: Equatable, Sendable {
     public var cpu: Double
     public var power: Double?
     public var count: Int
+    /// The main process belongs to this user.
+    public var owned: Bool = false
 }
 
 public enum ProcessGrouping {
@@ -63,12 +68,14 @@ public enum ProcessGrouping {
                 group.count += 1
                 if sample.path.count < mainPathLength[key, default: .max] {
                     group.pid = sample.pid
+                    group.owned = sample.owned
                     mainPathLength[key] = sample.path.count
                 }
                 groups[key] = group
             } else {
                 groups[key] = ProcessGroup(name: name(of: sample.path), bundlePath: app, pid: sample.pid,
-                                           memory: sample.memory, cpu: sample.cpu, power: sample.power, count: 1)
+                                           memory: sample.memory, cpu: sample.cpu, power: sample.power, count: 1,
+                                           owned: sample.owned)
                 mainPathLength[key] = sample.path.count
             }
         }

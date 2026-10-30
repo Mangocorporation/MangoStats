@@ -228,7 +228,8 @@ UX:
 - States: processes owned by another user (WindowServer, root daemons) -> Quit and Force Quit disabled, menu note "Owned by another user"; a quit that fails -> the row stays, nothing else
 - Words: "Quit <name>", "Force Quit <name>…", dialog title "Force Quit <name>?", message "Unsaved changes in <name> will be lost.", buttons "Force Quit" and "Cancel"; "Show in Activity Monitor", "Copy PID"
 - Access: Return confirms, Escape cancels the dialog; the menu works from the keyboard
-Status: todo
+Note: the row menu and the Force Quit dialog are not in snapshots (menus and dialogs aren't window captures); check by hand.
+Status: done
 
 ## M3 Sensors
 

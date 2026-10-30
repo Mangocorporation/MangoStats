@@ -71,21 +71,6 @@ struct PopoverView: View {
     }
 }
 
-/// The row menu for a process (S-008; Quit comes with S-014).
-struct ProcessMenu: View {
-    let process: ProcessRowData
-
-    var body: some View {
-        Button("Show in Activity Monitor") {
-            NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/Utilities/Activity Monitor.app"))
-        }
-        Button("Copy PID") {
-            NSPasteboard.general.clearContents()
-            NSPasteboard.general.setString(String(process.id), forType: .string)
-        }
-    }
-}
-
 // MARK: - Header
 
 private struct HealthHeader: View {

@@ -55,6 +55,19 @@ enum SelfTest {
             check("other users' processes are listed", status.processes.contains { $0.name == "WindowServer" })
             let memories = status.processes.prefix(5).map(\.name)
             check("top processes are sorted by memory", !memories.isEmpty, memories.joined(separator: ", "))
+            // S-014: Quit ends a process of this user.
+            let child = Process()
+            child.executableURL = URL(fileURLWithPath: "/bin/sleep")
+            child.arguments = ["60"]
+            try? child.run()
+            let pid = child.processIdentifier
+            check("Quit sends a quit request to the process", ProcessActions.quit(pid))
+            try? await Task.sleep(for: .seconds(0.5))
+            check("the process is gone after Quit", !child.isRunning)
+            if let other = status.processes.first(where: { $0.name == "WindowServer" }) {
+                check("other users' processes can't be quit", !other.ownedByUser)
+            }
+            check("this user's apps can be quit", status.processes.contains { $0.ownedByUser })
             print("INFO menu \(model.menuValues.sorted { $0.key.rawValue < $1.key.rawValue }.map { "\($0.key.rawValue)=\($0.value)" }.joined(separator: " "))")
             print("INFO top \(memories.joined(separator: ", ")) · battery \(status.battery) \(status.batteryState) \(status.batteryHealth) · net \(status.networkInterface) \(status.network) \(status.networkUnit)")
 

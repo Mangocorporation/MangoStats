@@ -38,6 +38,8 @@ nonisolated final class ProcessReader: @unchecked Sendable {
             let usage = Usage(cpuNanos: UInt64(Double(info.ri_user_time + info.ri_system_time) * timebase),
                               energy: info.ri_energy_nj)
             next[pid] = usage
+            // rusage works only for this user's processes.
+            samples[index].owned = true
             samples[index].memory = Int64(info.ri_phys_footprint)
             if elapsed > 0, let old = last[pid], usage.cpuNanos >= old.cpuNanos, usage.energy >= old.energy {
                 samples[index].cpu = Double(usage.cpuNanos - old.cpuNanos) / elapsed * 100

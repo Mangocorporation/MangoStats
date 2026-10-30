@@ -7,6 +7,8 @@ struct ProcessTableView: View {
     @Environment(AppModel.self) private var model
     let data: StatusData
     @State private var searching = false
+    /// The process waiting for Force Quit confirmation.
+    @State private var forceQuitTarget: ProcessRowData?
     @FocusState private var searchFocused: Bool
 
     var body: some View {
@@ -23,7 +25,9 @@ struct ProcessTableView: View {
                         message("No processes match \u{201C}\(model.processQuery)\u{201D}")
                     }
                     ForEach(rows, id: \.self) { process in
-                        ProcessRow(process: process) { AnyView(ProcessMenu(process: process)) }
+                        ProcessRow(process: process) {
+                            AnyView(ProcessMenu(process: process) { forceQuitTarget = process })
+                        }
                             .padding(.trailing, Metric.iconGap)
                     }
                 }
@@ -36,6 +40,14 @@ struct ProcessTableView: View {
         .overlay(RoundedRectangle(cornerRadius: Metric.cardRadius, style: .continuous)
             .strokeBorder(Ink.cardStroke, lineWidth: Metric.cardStroke))
         .clipShape(RoundedRectangle(cornerRadius: Metric.cardRadius, style: .continuous))
+        .confirmationDialog("Force Quit \(forceQuitTarget?.name ?? "")?",
+                            isPresented: Binding(get: { forceQuitTarget != nil }, set: { if !$0 { forceQuitTarget = nil } }),
+                            presenting: forceQuitTarget) { process in
+            Button("Force Quit", role: .destructive) { ProcessActions.forceQuit(process.id) }
+            Button("Cancel", role: .cancel) {}
+        } message: { process in
+            Text("Unsaved changes in \(process.name) will be lost.")
+        }
     }
 
     private func header(shown: Int) -> some View {
@@ -96,5 +108,32 @@ struct ProcessTableView: View {
         model.processQuery = ""
         searching = false
         searchFocused = false
+    }
+}
+
+/// The row menu for a process (S-008, S-014). Without `forceQuit` (the
+/// popover), it has no Quit commands.
+struct ProcessMenu: View {
+    let process: ProcessRowData
+    var forceQuit: (() -> Void)?
+
+    var body: some View {
+        if let forceQuit {
+            Button("Quit \(process.name)") { ProcessActions.quit(process.id) }
+                .disabled(!process.ownedByUser)
+            Button("Force Quit \(process.name)…", action: forceQuit)
+                .disabled(!process.ownedByUser)
+            if !process.ownedByUser {
+                Text("Owned by another user")
+            }
+            Divider()
+        }
+        Button("Show in Activity Monitor") {
+            NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/Utilities/Activity Monitor.app"))
+        }
+        Button("Copy PID") {
+            NSPasteboard.general.clearContents()
+            NSPasteboard.general.setString(String(process.id), forType: .string)
+        }
     }
 }

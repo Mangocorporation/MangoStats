@@ -107,7 +107,8 @@ func batteryStates() {
 func processRows() {
     var builder = StatusBuilder(system: system)
     let samples = [
-        ProcessSample(pid: 10, path: "/Applications/Safari.app/Contents/MacOS/Safari", memory: gib, cpu: 30, power: 2),
+        ProcessSample(pid: 10, path: "/Applications/Safari.app/Contents/MacOS/Safari", memory: gib, cpu: 30, power: 2,
+                      owned: true),
         ProcessSample(pid: 589, path: "/System/Library/WindowServer", memory: gib / 2, cpu: 5, power: nil),
     ]
     let update = builder.update(reading(at: 0, processes: samples), network: NetworkContext(), previous: .placeholder)
@@ -116,6 +117,8 @@ func processRows() {
     #expect(update.status.processes[0].hot)
     #expect(update.status.processes[0].bundlePath == "/Applications/Safari.app")
     #expect(update.status.processes[1].power == "--")
+    #expect(update.status.processes[0].ownedByUser)
+    #expect(!update.status.processes[1].ownedByUser)
     #expect(update.status.batteryDrain == "Top drain now Safari")
 
     let closed = builder.update(reading(at: 2), network: NetworkContext(), previous: update.status)
