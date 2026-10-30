@@ -57,6 +57,12 @@ struct PopoverView: View {
             .keyboardShortcut("1")
             .help("Open the Status window (⌘1)")
             Spacer()
+            if let version = model.updater.available {
+                // A background check found an update: offer it here too (S-035).
+                Button("Install MangoStats \(version)…") { model.updater.check() }
+                    .buttonStyle(SegmentButtonStyle(selected: true, compact: true))
+                    .help("Download and install MangoStats \(version)")
+            }
             Button("Settings…", systemImage: KitIcon.gear.symbol) {
                 NSApp.activate()
                 openSettings()

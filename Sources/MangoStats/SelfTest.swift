@@ -111,6 +111,14 @@ enum SelfTest {
             check("Clear History empties the database", await reopened.minutes(since: .distantPast).isEmpty)
             check("test runs use a history file in /tmp", HistoryStore.defaultURL.path.hasPrefix("/tmp/"))
 
+            // S-035: updates.
+            check("test runs never check for updates", !model.updater.enabled && !model.updater.canCheck)
+            check("the app has an update feed and key",
+                  Bundle.main.object(forInfoDictionaryKey: "SUFeedURL") != nil
+                  && Bundle.main.object(forInfoDictionaryKey: "SUPublicEDKey") != nil)
+            check("Sparkle is embedded", FileManager.default.fileExists(
+                atPath: Bundle.main.bundlePath + "/Contents/Frameworks/Sparkle.framework"))
+
             // S-031 to S-034: alerts.
             check("alerts are off by default", AppModel().alerts.showAlerts == false)
             var alerts = model.alerts

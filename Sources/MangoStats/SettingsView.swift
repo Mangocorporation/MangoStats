@@ -79,6 +79,7 @@ struct GeneralSettings: View {
                     .foregroundStyle(.secondary)
             }
         }
+        UpdatesSection()
         FanControlSection()
         HistorySection()
         Section {
@@ -171,6 +172,23 @@ private struct AlertRuleRow: View {
             }))
             .labelsHidden()
             .toggleStyle(.switch)
+        }
+    }
+}
+
+/// Updates: Check for Updates… and the daily background check (S-035).
+struct UpdatesSection: View {
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        @Bindable var updater = model.updater
+        Section("Updates") {
+            LabeledContent("MangoStats \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "")") {
+                Button(updater.available.map { "Install MangoStats \($0)…" } ?? "Check for Updates…") { updater.check() }
+                    .disabled(!updater.enabled || !updater.canCheck)
+            }
+            Toggle("Check for updates automatically", isOn: $updater.checksAutomatically)
+                .disabled(!updater.enabled)
         }
     }
 }

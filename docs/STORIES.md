@@ -476,6 +476,23 @@ UX:
 - Words: "Memory pressure is critical", "CPU temperature above", "CPU busy above", "Disk space below", "Battery below", "An app uses more than"; footer "Each alert shows once, then waits until the problem clears. At most every 30 minutes."
 Status: done
 
+## M9 Updates
+
+### S-035 Check for updates
+As the user, I get new versions of MangoStats without downloading them by hand.
+Acceptance:
+- [self] Sparkle 2.10.1 is embedded and signed inside-out; the feed is https://mangocorporation.github.io/MangoStats/appcast.xml, signed with the team's EdDSA key (shared with MangoMemory).
+- [self] Test runs never check for updates.
+- [manual] Settings › General › Updates: "Check for Updates…" and "Check for updates automatically" (daily); a background find shows "Install MangoStats <version>…" in the popover.
+Status: done
+
+### S-036 Release a version
+As the developer, I run tools/release.sh and tools/publish.sh to ship a notarized version that every copy installs.
+Acceptance:
+- [self] tools/release.sh --check: Developer ID signature, hardened runtime on the app and the helper, the helper accepts the build.
+- [manual] tools/release.sh notarizes and staples, signs the zip, adds it to site/appcast.xml; tools/publish.sh creates the GitHub release, then pushes the feed.
+Status: todo
+
 ## Dropped
 - Clean, Apps, Optimize, Analyze tabs: another app's job (MangoCleaner).
 - "Cleaned / Uninstalled / Optimized" counters: belong to cleaning, not stats.

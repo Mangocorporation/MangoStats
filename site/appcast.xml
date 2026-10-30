@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The Check for Updates feed (Sparkle). tools/release.sh adds each release at
+     the top, signed with the team's EdDSA key; tools/publish.sh puts it
+     online only after the zip is on GitHub. Do not edit the signatures by hand. -->
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
+  <channel>
+    <title>MangoStats</title>
+    <link>https://mangocorporation.github.io/MangoStats/</link>
+    <description>New versions of MangoStats.</description>
+    <language>en</language>
+    <!-- releases, newest first -->
+  </channel>
+</rss>

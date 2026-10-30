@@ -30,6 +30,8 @@ enum Page: String, CaseIterable, Identifiable {
 /// App-wide state that the menu bar item, popover, and windows share.
 @Observable
 final class AppModel {
+    /// Check for Updates (Sparkle). Test runs never start it.
+    let updater = Updater()
     var page: Page = .status
     /// What the cards and tables show. The samplers replace it (S-001 and on).
     var status: StatusData = .initial
