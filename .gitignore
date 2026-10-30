@@ -1,0 +1,9 @@
+.remember/
+.build/
+.swiftpm/
+DerivedData/
+*.xcodeproj/
+xcuserdata/
+.DS_Store
+.env*
+/shots/
