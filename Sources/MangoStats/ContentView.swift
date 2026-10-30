@@ -1,62 +1,63 @@
+import AppKit
 import SwiftUI
 import MangoStatsKit
 
-/// The menu bar item: the stats people chose in Settings > Menu Bar.
-/// Values arrive with the sampler (S-001); until then each shows "--".
+/// The menu bar item: the stats people chose in Settings > Menu Bar (S-001, S-009).
+/// MenuBarExtra flattens a label to one image or text, so the stats are
+/// drawn into one template image: the menu bar tints it for light and dark.
 struct MenuBarLabel: View {
     @Environment(AppModel.self) private var model
 
     var body: some View {
-        let stats = model.menuBar.visible
-        if stats.isEmpty {
-            // Never invisible: with every stat off, show the app's symbol.
-            KitIcon.chart.image
-        } else {
-            HStack(spacing: Space.xs) {
-                ForEach(stats) { stat in
-                    if model.menuBarStyle == .iconAndValue {
-                        stat.icon.image
-                    }
-                    Text("--").monospacedDigit()
-                }
+        let stats = model.shownStats
+        Group {
+            if stats.isEmpty {
+                // Never invisible: with every stat off, show the app's symbol.
+                KitIcon.chart.image
+            } else {
+                Image(nsImage: MenuBarImage.render(stats: stats, values: model.menuValues, style: model.menuBarStyle))
             }
         }
+        .task { model.startSampling() }
+        .accessibilityLabel(MenuBarImage.spoken(stats: stats, values: model.menuValues))
     }
 }
 
-/// The popover that opens from the menu bar item. Cards arrive with S-002 to S-008.
-struct PopoverView: View {
-    @Environment(\.openWindow) private var openWindow
-    @Environment(\.openSettings) private var openSettings
+/// The stats in a row, as the menu bar draws them.
+struct MenuBarStatsRow: View {
+    let stats: [MenuBarStat]
+    let values: [MenuBarStat: String]
+    let style: MenuBarStyle
 
     var body: some View {
-        VStack(alignment: .leading, spacing: Space.lg) {
-            Text("MangoStats").font(.title2.bold())
-            Text("Stats arrive in the next stories.")
-                .foregroundStyle(.secondary)
-            Divider()
-            HStack(spacing: Space.sm) {
-                Button("Open MangoStats", systemImage: "macwindow") {
-                    NSApp.activate()
-                    openWindow(id: "status")
+        HStack(spacing: Space.sm) {
+            ForEach(stats) { stat in
+                HStack(spacing: 2) {
+                    if style == .iconAndValue {
+                        stat.icon.image.font(.system(size: 12, weight: .medium))
+                    }
+                    Text(values[stat] ?? "--")
+                        .font(.system(size: 12, weight: .medium).monospacedDigit())
                 }
-                .keyboardShortcut("1")
-                .help("Open the Status window (⌘1)")
-                Spacer()
-                Button("Settings…", systemImage: "gearshape") {
-                    NSApp.activate()
-                    openSettings()
-                }
-                .keyboardShortcut(",")
-                .help("Change which stats show in the menu bar (⌘,)")
-                Button("Quit MangoStats", systemImage: "power") { NSApp.terminate(nil) }
-                    .keyboardShortcut("q")
-                    .help("Quit MangoStats (⌘Q)")
             }
-            .labelStyle(.iconOnly)
-            .buttonStyle(.borderless)
         }
-        .padding(Space.lg)
-        .frame(width: 360)
+        .foregroundStyle(.black)
+        .fixedSize()
+    }
+}
+
+enum MenuBarImage {
+    static func render(stats: [MenuBarStat], values: [MenuBarStat: String], style: MenuBarStyle) -> NSImage {
+        let renderer = ImageRenderer(content: MenuBarStatsRow(stats: stats, values: values, style: style))
+        renderer.scale = NSScreen.main?.backingScaleFactor ?? 2
+        let image = renderer.nsImage ?? NSImage()
+        image.isTemplate = true
+        return image
+    }
+
+    /// "MangoStats, CPU 15 percent, Memory 84 percent" for VoiceOver.
+    static func spoken(stats: [MenuBarStat], values: [MenuBarStat: String]) -> String {
+        let parts = stats.map { "\($0.title) \((values[$0] ?? "not measured yet").replacingOccurrences(of: "%", with: " percent"))" }
+        return (["MangoStats"] + parts).joined(separator: ", ")
     }
 }

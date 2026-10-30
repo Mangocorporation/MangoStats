@@ -1,4 +1,5 @@
 import SwiftUI
+import MangoStatsKit
 
 /// The Status window: eight cards in a 4 × 2 grid and the process table,
 /// laid out like local/reference/status-window.png.
@@ -21,6 +22,8 @@ struct StatusView: View {
         .focusEffectDisabled()
         .preferredColorScheme(.dark)
         .noInitialFocus()
+        .onAppear { model.windowOpen = true }
+        .onDisappear { model.windowOpen = false }
         .task {
             SelfTest.runIfRequested(model: model)
             Snapshot.runIfRequested(model: model, openSettings: openSettings)
@@ -141,7 +144,9 @@ private struct MemoryCard: View {
 
     var body: some View {
         KitCard {
-            CardHeader(icon: .memory, title: "Memory", tint: Ink.memory, pill: data.memoryPressure)
+            CardHeader(icon: .memory, title: "Memory", tint: Ink.memory,
+                       pill: data.memoryPressure == "--" ? nil : "Pressure \(data.memoryPressure.lowercased())",
+                       pillHot: data.memoryPressureLevel != .normal)
             HeroValue(value: data.memory, unit: "%").padding(.top, Metric.heroTop)
             Spacer(minLength: 0)
             AreaChart(values: data.memoryHistory)
@@ -202,7 +207,7 @@ private struct DiskCard: View {
     var body: some View {
         KitCard {
             CardHeader(icon: .disk, title: "Free space", tint: Ink.network, pill: data.diskTotal)
-            HeroValue(value: data.diskFree, unit: "GB").padding(.top, Metric.heroTop)
+            HeroValue(value: data.diskFree, unit: data.diskFreeUnit).padding(.top, Metric.heroTop)
             Spacer(minLength: 0)
             KitProgressBar(value: data.diskUsed)
             Spacer(minLength: 0)

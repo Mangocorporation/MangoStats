@@ -112,6 +112,7 @@ struct PopoverProcessRow: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
             Text(process.memory)
                 .foregroundStyle(Ink.label)
+                .frame(width: Metric.popColMemory, alignment: .trailing)
             Text(process.cpuText)
                 .foregroundStyle(process.hot ? Ink.hot : Ink.label)
                 .fontWeight(process.hot ? .semibold : .regular)
@@ -125,6 +126,20 @@ struct PopoverProcessRow: View {
         .kitType(.rowNumber)
         .frame(height: Metric.popRowHeight)
         .accessibilityElement(children: .combine)
+    }
+}
+
+/// Column titles above the popover's process rows.
+struct PopoverProcessHeader: View {
+    var body: some View {
+        HStack(spacing: Metric.cardPadding) {
+            Text("Top Processes").frame(maxWidth: .infinity, alignment: .leading)
+            Text("Memory").frame(width: Metric.popColMemory, alignment: .trailing)
+            Text("% CPU").fixedSize().frame(width: Metric.colCPU, alignment: .trailing)
+            Spacer().frame(width: Metric.segmentHeight)
+        }
+        .kitType(.popHeader)
+        .foregroundStyle(Ink.label)
     }
 }
 

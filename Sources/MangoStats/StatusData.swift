@@ -1,4 +1,5 @@
 import Foundation
+import MangoStatsKit
 
 /// Everything the cards and tables show, already formatted. The samplers
 /// (S-001 and on) fill it; until then the app shows `placeholder`, and
@@ -7,6 +8,7 @@ struct StatusData {
     var health: String
     var healthWord: String
     var healthReason: String
+    var healthReasons: [String] = []
     var chip: String
     var ram: String
     var macOS: String
@@ -24,10 +26,14 @@ struct StatusData {
 
     var memory: String
     var memoryPressure: String
+    var memoryPressureLevel: MemoryPressure = .normal
     var memoryFooter: String
+    /// Popover footer: "20,25 GB / 24 GB".
+    var memoryUsedOfTotal: String = "--"
     var memoryHistory: [Double]
 
     var diskFree: String
+    var diskFreeUnit: String = "GB"
     var diskTotal: String
     var diskUsed: Double
     var diskFooter: String
@@ -43,6 +49,7 @@ struct StatusData {
     var fanSpeed: String
     var fanNote: String
 
+    var hasBattery = true
     var battery: String
     var batteryWatts: String?
     var batteryHealth: String
@@ -75,10 +82,11 @@ struct StatusData {
         gpu: "53", gpuTemp: "42°C", gpuFooter: "normal · 0.3W",
         gpuHistory: [0.08, 0.1, 0.09, 0.12, 0.1, 0.1, 0.18, 0.1, 0.12, 0.1, 0.11, 0.1, 0.13, 0.1, 0.1, 0.12,
                      0.11, 0.1, 0.12, 0.1, 0.11, 0.1, 0.1, 0.12, 0.1, 0.25, 0.1, 0.85, 0.15, 0.9],
-        memory: "84", memoryPressure: "Pressure normal", memoryFooter: "20,07 GB · 6,62 GB swap",
+        memory: "84", memoryPressure: "Normal", memoryFooter: "20,07 GB · 6,62 GB swap",
+        memoryUsedOfTotal: "20,25 GB / 24 GB",
         memoryHistory: Array(repeating: 0.84, count: 30),
         diskFree: "99", diskTotal: "494 GB", diskUsed: 0.8, diskFooter: "395 GB used · 80%",
-        network: "4", networkUnit: "KB/s", networkInterface: "Wi-Fi", networkUpload: "Upload < 1 KB/s",
+        network: "4", networkUnit: "KB/s", networkInterface: "Wi-Fi", networkUpload: "Upload <1 KB/s",
         networkLatency: "Low Lag",
         networkHistory: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 9, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
         fanRPM: "0", fanSpeed: "Speed 0%", fanNote: "Managed by macOS",
@@ -112,6 +120,7 @@ struct StatusData {
     /// Snapshot runs and APP_SAMPLE=1 show the sample; the real app waits for the samplers.
     static var initial: StatusData {
         let env = ProcessInfo.processInfo.environment
+        if env["APP_LIVE"] == "1" { return .placeholder }
         return env["APP_SNAPSHOT"] != nil || env["APP_SAMPLE"] == "1" ? .sample : .placeholder
     }
 }

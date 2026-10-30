@@ -79,13 +79,13 @@ enum KitType {
     var font: Font {
         switch self {
         case .cardHeader: .system(size: 11.5, weight: .semibold)
-        case .popHeader: .system(size: 12.5, weight: .medium)
+        case .popHeader: .system(size: 12, weight: .medium)
         case .hero: .system(size: 28, weight: .semibold).monospacedDigit()
         case .popHero: .system(size: 22, weight: .semibold).monospacedDigit()
         case .unit: .system(size: 12.5, weight: .medium)
         case .footer: .system(size: 12.5, weight: .regular).monospacedDigit()
         case .pill: .system(size: 11.5, weight: .medium).monospacedDigit()
-        case .chip: .system(size: 12.5, weight: .medium)
+        case .chip: .system(size: 12, weight: .medium)
         case .health: .system(size: 30, weight: .bold).monospacedDigit()
         case .healthWord: .system(size: 15, weight: .medium)
         case .row: .system(size: 13, weight: .medium)
@@ -140,9 +140,11 @@ nonisolated enum Metric {
     static let cardStroke: CGFloat = 1
 
     // Popover
-    static let popoverWidth: CGFloat = 340
+    /// 340 measured, but the popover capture is also scaled (text 0.78–0.87); 392 fits native text.
+    static let popoverWidth: CGFloat = 392
     static let popoverMargin: CGFloat = 10
-    static let popCardHeight: CGFloat = 108
+    /// 108 at the capture's scale; 122 fits native text.
+    static let popCardHeight: CGFloat = 122
     static let popCardPadding: CGFloat = 14
     /// Popover charts, measured 14 pt in menubar-popover.png.
     static let popChartHeight: CGFloat = 14
@@ -171,6 +173,11 @@ nonisolated enum Metric {
     static let segmentHeight: CGFloat = 24
     static let segmentPadding: CGFloat = 17
     static let segmentGap: CGFloat = 12
+    static let compactSegmentHeight: CGFloat = 22
+    static let compactSegmentPadding: CGFloat = 9
+    static let compactSegmentGap: CGFloat = 4
+    static let popColMemory: CGFloat = 80
+    static let headerIcon: CGFloat = 20
 
     static let orbSize: CGFloat = 92
 

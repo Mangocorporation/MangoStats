@@ -66,26 +66,79 @@ struct GeneralSettings: View {
     }
 }
 
-/// Settings > Menu Bar: which stats show, in what order (S-009, finished in its story).
+/// Settings > Menu Bar: which stats show, in what order (S-009).
+/// Changes apply at once; there is no Save button.
 struct MenuBarSettings: View {
     @Environment(AppModel.self) private var model
 
     var body: some View {
         @Bindable var model = model
-        Section("Show in Menu Bar") {
-            ForEach(model.menuBar.order) { stat in
-                Toggle(isOn: Binding(get: { model.menuBar.enabled.contains(stat) },
-                                     set: { model.setShown(stat, $0) })) {
-                    Label(stat.title, systemImage: stat.icon.symbol)
+        Section("Preview") {
+            HStack {
+                Spacer()
+                if model.shownStats.isEmpty {
+                    KitIcon.chart.image
+                } else {
+                    MenuBarStatsRow(stats: model.shownStats, values: model.menuValues, style: model.menuBarStyle)
+                        .foregroundStyle(.primary)
                 }
-                .accessibilityLabel("Show \(stat.title) in menu bar")
+            }
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(MenuBarImage.spoken(stats: model.shownStats, values: model.menuValues))
+        }
+        Section {
+            ForEach(model.menuBar.order) { stat in
+                StatToggle(stat: stat)
+                    .contextMenu {
+                        Button("Move Up") { move(stat, by: -1) }
+                            .disabled(model.menuBar.order.first == stat)
+                        Button("Move Down") { move(stat, by: 1) }
+                            .disabled(model.menuBar.order.last == stat)
+                    }
             }
             .onMove { model.menuBar.move(fromOffsets: $0, toOffset: $1) }
+        } header: {
+            Text("Show in Menu Bar")
+        } footer: {
+            Text(model.shownStats.isEmpty
+                 ? "The menu bar shows the MangoStats icon when no stats are on."
+                 : "Drag stats to change their order, or Control-click one to move it.")
+                .foregroundStyle(.secondary)
         }
         Section {
             Picker("Menu bar style", selection: $model.menuBarStyle) {
                 ForEach(MenuBarStyle.allCases) { Text($0.title).tag($0) }
             }
         }
+    }
+
+    private func move(_ stat: MenuBarStat, by step: Int) {
+        guard let index = model.menuBar.order.firstIndex(of: stat) else { return }
+        let target = index + step
+        guard model.menuBar.order.indices.contains(target) else { return }
+        model.menuBar.move(fromOffsets: IndexSet(integer: index), toOffset: step > 0 ? target + 1 : target)
+    }
+}
+
+/// One stat's switch. Stats this Mac can't show yet are listed but off.
+private struct StatToggle: View {
+    @Environment(AppModel.self) private var model
+    let stat: MenuBarStat
+
+    var body: some View {
+        let available = model.isAvailable(stat)
+        Toggle(isOn: Binding(get: { available && model.menuBar.enabled.contains(stat) },
+                             set: { model.setShown(stat, $0) })) {
+            Label {
+                Text(stat.title)
+                if !available {
+                    Text(model.unavailableReason(stat))
+                }
+            } icon: {
+                stat.icon.image.frame(width: Space.xl)
+            }
+        }
+        .disabled(!available)
+        .accessibilityLabel("Show \(stat.title) in menu bar")
     }
 }

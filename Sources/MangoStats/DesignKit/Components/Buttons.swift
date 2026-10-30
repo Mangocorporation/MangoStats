@@ -42,14 +42,17 @@ struct RingButtonStyle: ButtonStyle {
 /// Capsule segment for the fan modes (design/KIT.md, Segment button).
 struct SegmentButtonStyle: ButtonStyle {
     var selected = false
+    /// Smaller, for half-width popover cards.
+    var compact = false
 
     func makeBody(configuration: Configuration) -> some View {
-        SegmentBody(configuration: configuration, selected: selected)
+        SegmentBody(configuration: configuration, selected: selected, compact: compact)
     }
 
     private struct SegmentBody: View {
         let configuration: Configuration
         let selected: Bool
+        let compact: Bool
         @State private var hovering = false
         @Environment(\.isEnabled) private var isEnabled
         @Environment(\.kitForcedState) private var forced
@@ -61,8 +64,8 @@ struct SegmentButtonStyle: ButtonStyle {
             configuration.label
                 .kitType(.segment)
                 .foregroundStyle(selected ? Ink.text : Ink.secondary)
-                .padding(.horizontal, Metric.segmentPadding)
-                .frame(height: Metric.segmentHeight)
+                .padding(.horizontal, compact ? Metric.compactSegmentPadding : Metric.segmentPadding)
+                .frame(height: compact ? Metric.compactSegmentHeight : Metric.segmentHeight)
                 .background(Capsule().fill(fill(pressed: pressed, hover: hover && enabled)))
                 .contentShape(Capsule())
                 .opacity(enabled || selected ? 1 : 0.5)

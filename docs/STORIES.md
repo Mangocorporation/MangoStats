@@ -18,7 +18,8 @@ UX:
 - States: before the first sample "--"; a stat that cannot be read shows "--", never 0
 - Words: default stats CPU and Memory, style Icon and Value (SF Symbols cpu, memorychip + "15%")
 - Access: VoiceOver reads "MangoStats, CPU 15 percent, Memory 84 percent"; the item opens with Return when focused (Control-F8)
-Status: todo
+Note: memory % uses Activity Monitor's "Memory Used" (app + wired + compressed). The label is one template image, since MenuBarExtra flattens HStack labels.
+Status: done
 
 ### S-002 Open the popover and see the health header
 As the user, I click the menu bar item and see a health score (0–100 + Good/Fair/Poor), and chips for chip name, RAM, macOS version and uptime.
@@ -34,7 +35,7 @@ UX:
 - States: health while the first samples load shows "--" with no word; reasons behind the score in a tooltip on the number ("Disk space low · 99 GB free")
 - Words: "84 Good"; chips "M5", "24 GB", "macOS 26.6.2", "up 51 days, 10 hrs"; footer row with icon buttons Open MangoStats (⌘1), Settings… (⌘,), Quit MangoStats (⌘Q) — not in the reference, but a menu bar app needs a way out
 - Access: footer buttons have tooltips "Open the Status window (⌘1)", "Change which stats show in the menu bar (⌘,)", "Quit MangoStats (⌘Q)"; health color is also spelled out in the word
-Status: todo
+Status: done
 
 ### S-003 Read the CPU card
 As the user, I see CPU % with a green bar history and "idle · 1.0W" below it.
@@ -50,7 +51,8 @@ UX:
 - States: no temperature sensor -> pill hidden (not "--") so it doesn't look broken; no power reading -> "idle" alone
 - Words: header "CPU", pill "41°C", footer "idle · 1.0W"
 - Access: VoiceOver reads the card as one element: "CPU, 15 percent, idle, 1 watt, 41 degrees"; bars are decorative
-Status: todo
+Note: temperature pill and watts arrive with S-016/S-017; until then the pill is hidden and the footer shows the load word only.
+Status: done
 
 ### S-004 Read the memory card
 As the user, I see memory %, a gold area chart, the pressure pill (Normal/Warning/Critical) and "20,25 GB / 24 GB".
@@ -66,7 +68,7 @@ UX:
 - States: Warning pill amber, Critical pill red, each with the word (not color alone)
 - Words: header "MEM" in the popover, "Memory" in the Status window; pill "Normal"; footer "20,25 GB / 24 GB"
 - Access: VoiceOver "Memory, 84 percent, pressure normal, 20.25 of 24 gigabytes"
-Status: todo
+Status: done
 
 ### S-005 Read the free space card
 As the user, I see free GB on the startup disk, a usage bar, total capacity pill and "396 GB used · 80%".
@@ -81,7 +83,7 @@ UX:
 - States: under 10 % free the bar turns amber and Health says why
 - Words: header "Free space", value "99 GB", pill "494 GB", footer "396 GB used · 80%"
 - Access: VoiceOver "Free space, 99 gigabytes of 494, 80 percent used"; the bar is a progress value
-Status: todo
+Status: done
 
 ### S-006 Read the network card
 As the user, I see download speed, a blue line, the interface pill (Wi-Fi/Ethernet), "Upload <1KB/s" and a latency label.
@@ -97,7 +99,7 @@ UX:
 - States: offline -> value "--", pill "Offline", latency "Offline"; unknown interface -> pill "Network"
 - Words: header "Network", value "<1 KB/s" (auto KB/s, MB/s), pill "Wi-Fi" or "Ethernet", footer "Upload <1 KB/s" and "Low Lag"
 - Access: VoiceOver "Network, download under 1 kilobyte per second, upload under 1 kilobyte per second, Wi-Fi, low lag"
-Status: todo
+Status: done
 
 ### S-007 Read the battery card
 As the user, I see battery %, charger watts, state (Charged/Charging/On battery, with time left) and health %.
@@ -113,7 +115,7 @@ UX:
 - States: Charging "Charging · 45 min to full"; On Battery "On Battery · 3 h 20 min left"; desktop "No battery"
 - Words: header "Battery", "100%", bolt + "65W", "Charged", pill "100% Health"
 - Access: ring buttons have tooltips "Open Battery settings" and "Open Energy settings"; VoiceOver reads state in words
-Status: todo
+Status: done
 
 ### S-008 See the top processes
 As the user, I see the 5 processes using the most memory, with memory and % CPU, and CPU over 20 % highlighted orange.
@@ -129,7 +131,8 @@ UX:
 - States: names truncate with the full name in a tooltip; rows keep order unless the rank changes
 - Words: header "Top Processes", columns "Memory" and "% CPU"; `…` tooltip "More actions for Google Chrome"
 - Access: orange CPU values also bold, so the meaning isn't color alone; VoiceOver "Google Chrome, 18.52 gigabytes, 45.2 percent CPU"
-Status: todo
+Note: other users' processes (WindowServer) come from /bin/ps, which runs as root; own processes use proc_pid_rusage. Processes are grouped by app (Chrome and its helpers = one row), like the reference. Row menu has Show in Activity Monitor and Copy PID; Quit lands with S-014.
+Status: done
 
 ### S-009 Choose which stats show in the menu bar
 As the user, I open Settings → Menu Bar, turn stats on or off (CPU, GPU, Memory, Disk, Network, Temperature, Fan, Battery), and drag them into the order I want. The menu bar updates right away.
@@ -146,7 +149,8 @@ UX:
 - States: all stats off -> note under the list "The menu bar shows the MangoStats icon when no stats are on."; a stat this Mac lacks (Fan, Battery) is listed but disabled with "Not available on this Mac"
 - Words: tab "Menu Bar"; section "Show in Menu Bar"; rows "CPU", "GPU", "Memory", "Disk", "Network", "Temperature", "Fan", "Battery"; picker "Menu bar style" with "Icon and Value" and "Value Only"; "Preview"
 - Access: rows reorder with drag and with ⌥⌘↑ / ⌥⌘↓; each toggle reads "Show CPU in menu bar"
-Status: todo
+Note: GPU, Temperature and Fan are listed but off ("Coming in a later version") until M3. Keyboard reorder is Move Up / Move Down in the row's context menu instead of ⌥⌘↑/↓.
+Status: done
 
 ## M2 Dashboard window
 

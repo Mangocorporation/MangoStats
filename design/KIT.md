@@ -67,8 +67,8 @@ The reference image also has a 6.5 pt window shadow on the left: the window itse
 | cardRadius | 16 | ≈ 12 measured at capture scale |
 | cardPadding / cardPaddingBottom | 20 / 16 | header at +14, footer baseline 16 from the bottom, × zoom; tuned by compare |
 | heroTop | 12 | header to hero, tuned by compare |
-| popoverWidth / popoverMargin | 340 / 10 | measured (popover is native) |
-| popCardHeight / padding / chart | 108 / 14·12 / 14 | measured in menubar-popover.png |
+| popoverWidth / popoverMargin | 392 / 10 | 340 measured, but the popover capture is also scaled (text 0.78–0.87); 392 fits native text and two 181 pt card columns |
+| popCardHeight / padding / chart | 122 / 14·12 / 14 | 108 at capture scale; 122 fits native text |
 | pillHeight / radius | 18 / 5 | 13 at capture scale × zoom |
 | chipHeight / radius | 22 / 6 | popover chips |
 | bars | 10 × up to 16, gap 3 | 11 measured × zoom, tuned by compare |

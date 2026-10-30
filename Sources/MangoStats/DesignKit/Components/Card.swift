@@ -17,6 +17,8 @@ enum CardStyle {
 struct KitCard<Content: View>: View {
     var style: CardStyle = .window
     var height: CGFloat?
+    /// Grow to the content instead of the style's fixed height (lists).
+    var fitsContent = false
     @ViewBuilder var content: Content
 
     var body: some View {
@@ -24,7 +26,7 @@ struct KitCard<Content: View>: View {
             .padding([.top, .horizontal], style.padding)
             .padding(.bottom, style.paddingBottom)
             .frame(maxWidth: .infinity, alignment: .topLeading)
-            .frame(height: height ?? style.height, alignment: .top)
+            .frame(height: fitsContent ? nil : height ?? style.height, alignment: .top)
             .background(Ink.cardFill, in: shape)
             .overlay(shape.strokeBorder(Ink.cardStroke, lineWidth: Metric.cardStroke))
     }
@@ -49,8 +51,9 @@ struct CardHeader: View {
             Text(title)
                 .kitType(style.header)
                 .foregroundStyle(Ink.label)
-            Spacer(minLength: Metric.iconGap)
-            if let pill { KitPill(text: pill, hot: pillHot) }
+                .fixedSize()
+            Spacer(minLength: 2)
+            if let pill { KitPill(text: pill, hot: pillHot).fixedSize() }
         }
         .frame(height: Metric.pillHeight)
     }
@@ -84,7 +87,7 @@ struct CardFooter: View {
 
     var body: some View {
         HStack {
-            Text(leading).lineLimit(1)
+            Text(leading).lineLimit(1).layoutPriority(1)
             Spacer(minLength: Metric.iconGap)
             if let trailing { Text(trailing).lineLimit(1) }
         }
