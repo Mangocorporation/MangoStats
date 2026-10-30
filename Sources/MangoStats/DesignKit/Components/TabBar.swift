@@ -1,4 +1,5 @@
 import SwiftUI
+import MangoStatsKit
 
 /// The Status window's top switch, "Status | History" (design/KIT.md, Tab bar):
 /// a capsule track, the selected tab a white pill with dark text.
@@ -12,10 +13,10 @@ struct KitTabBar<Tab: Hashable & Identifiable>: View {
         HStack(spacing: 2) {
             ForEach(Array(tabs.enumerated()), id: \.element.id) { index, tab in
                 let selected = tab == selection
-                Button(title(tab)) { selection = tab }
+                Button(L10n.t(title(tab))) { selection = tab }
                     .buttonStyle(TabButtonStyle(selected: selected))
                     .keyboardShortcut(KeyEquivalent(Character("\(index + 1)")), modifiers: .command)
-                    .help("Show \(title(tab)) (⌘\(index + 1))")
+                    .help(L10n.f("Show %@ (⌘%ld)", L10n.t(title(tab)), index + 1))
                     .accessibilityAddTraits(selected ? .isSelected : [])
             }
         }

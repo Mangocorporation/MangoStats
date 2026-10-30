@@ -27,7 +27,7 @@ struct HistoryView: View {
                 }
                 Spacer()
                 KitSegmented(options: HistoryRange.allCases, selection: $range, title: \.title,
-                             help: { "Show the last \($0.title.lowercased())" })
+                             help: { L10n.f("Show the last %@", $0.title.lowercased()) })
             }
             .padding(.bottom, Metric.sectionGap - Metric.cardGap)
             if loaded && points.isEmpty {
@@ -152,7 +152,7 @@ private struct HistoryCard: View {
         let values = points.compactMap { chart.series[0].value($0) }
         guard !values.isEmpty, let peak = values.max() else { return "--" }
         let average = values.reduce(0, +) / Double(values.count)
-        return "avg \(chart.format(average)) · peak \(chart.format(peak))"
+        return L10n.f("avg %@ · peak %@", chart.format(average), chart.format(peak))
     }
 }
 

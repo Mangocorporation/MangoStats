@@ -1,5 +1,6 @@
 import AppKit
 import SwiftUI
+import MangoStatsKit
 
 // MangoStats
 //   MangoStats                      the app: a menu bar item, the Status window, and Settings
@@ -10,10 +11,16 @@ import SwiftUI
 //   APP_SAMPLE=1 MangoStats        show the reference values instead of "--" (until the samplers exist)
 //   APP_KIT_GALLERY=1 MangoStats   show the design kit gallery in the Status window
 //   APP_GRID=1 MangoStats           draw the grid and the layout probes over the window
+//   MangoStats -AppleLanguages "(pt-BR)"   run in another language (tools/snap.sh: APP_LANGUAGE=pt-BR)
 
 @main
 struct MangoStatsApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var delegate
+
+    init() {
+        // The Kit's sentences come from the same Localizable.strings as the views (S-051).
+        L10n.lookup = { Bundle.main.localizedString(forKey: $0, value: $0, table: nil) }
+    }
     @State private var model = AppModel()
 
     /// Snapshot and self-test runs open the Status window, which starts them.

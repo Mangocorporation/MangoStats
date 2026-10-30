@@ -1,4 +1,5 @@
 import AppKit
+import MangoStatsKit
 import SwiftUI
 
 /// The About tab: what MangoStats is, its version and links, and the other
@@ -54,7 +55,7 @@ struct AboutView: View {
     }
 
     private func link(_ title: String, _ url: URL) -> some View {
-        Button(title) { NSWorkspace.shared.open(url) }
+        Button(L10n.t(title)) { NSWorkspace.shared.open(url) }
             .buttonStyle(SecondaryButtonStyle())
             .help(url.absoluteString)
     }
@@ -91,7 +92,7 @@ struct AboutView: View {
 
     private func credit(_ label: String, _ value: String) -> some View {
         HStack(alignment: .firstTextBaseline) {
-            Text(label).kitType(.statLabel).foregroundStyle(Ink.secondary)
+            Text(L10n.t(label)).kitType(.statLabel).foregroundStyle(Ink.secondary)
             Spacer(minLength: Metric.cardGap)
             Text(value).kitType(.mono).foregroundStyle(Ink.body)
         }
@@ -102,7 +103,7 @@ struct AboutView: View {
         let info = Bundle.main.infoDictionary
         let short = info?["CFBundleShortVersionString"] as? String ?? "–"
         let build = info?["CFBundleVersion"] as? String ?? ""
-        return "Version \(short)" + (build.isEmpty ? "" : " (\(build))")
+        return L10n.f("Version %@", short) + (build.isEmpty ? "" : " (\(build))")
     }
 
     enum Links {
@@ -157,8 +158,8 @@ private struct OtherAppCard: View {
                         Text(app.name).kitType(.sectionTitle).foregroundStyle(Ink.text)
                         if installed != nil { KitPill(text: "installed") }
                     }
-                    Text(app.tagline).kitType(.body).foregroundStyle(Ink.body)
-                    Text(app.detail).kitType(.footer).foregroundStyle(Ink.secondary)
+                    Text(L10n.t(app.tagline)).kitType(.body).foregroundStyle(Ink.body)
+                    Text(L10n.t(app.detail)).kitType(.footer).foregroundStyle(Ink.secondary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 Spacer(minLength: Metric.cardGap)

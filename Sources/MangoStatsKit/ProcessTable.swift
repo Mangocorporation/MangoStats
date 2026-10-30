@@ -35,9 +35,9 @@ public enum ProcessKind: String, CaseIterable, Sendable {
 
     public var title: String {
         switch self {
-        case .all: "All"
-        case .apps: "Apps"
-        case .background: "Background"
+        case .all: L10n.t("All")
+        case .apps: L10n.t("Apps")
+        case .background: L10n.t("Background")
         }
     }
 

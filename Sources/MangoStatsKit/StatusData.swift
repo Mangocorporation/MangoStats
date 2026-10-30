@@ -93,6 +93,7 @@ public struct StatusData: Sendable {
     public var batteryPower: String = "–"
     public var batteryTemperature: String = "–"
     public var batteryCondition: String = "–"
+    public var batteryServiceRecommended = false
     public var batteryAdapter: String = "–"
     public var diskRead: String = "--"
     public var diskWrite: String = "--"

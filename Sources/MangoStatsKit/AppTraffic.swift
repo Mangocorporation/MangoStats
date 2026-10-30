@@ -76,7 +76,7 @@ public enum HeavyTraffic {
     public static func sentence(_ app: AppTraffic, locale: Locale = .current) -> String {
         let uploading = app.upload > app.download
         let speed = Format.speed(uploading ? app.upload : app.download, locale: locale)
-        return "\(app.name) is \(uploading ? "uploading" : "downloading") at \(speed.value) \(speed.unit)"
+        return L10n.f(uploading ? "%@ is uploading at %@ %@" : "%@ is downloading at %@ %@", app.name, speed.value, speed.unit)
     }
 }
 

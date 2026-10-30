@@ -106,27 +106,33 @@ public struct NetworkVerdict: Equatable, Sendable {
             health[.internet] = internet.loss > 0.02 || (internet.average ?? 0) > 100 ? .slow : .good
         }
 
-        let wifiWord = input.wired ? "Ethernet" : "Wi-Fi"
+        let wired = input.wired
         if health[.router] == .failing && !router.reachable {
-            self.init(title: "Offline", body: "Your router isn't answering. Check that \(wifiWord) is connected and the router is on.",
+            self.init(title: L10n.t("Offline"),
+                      body: L10n.t(wired ? "Your router isn't answering. Check that Ethernet is connected and the router is on."
+                                         : "Your router isn't answering. Check that Wi-Fi is connected and the router is on."),
                       culprit: .router, health: health)
         } else if let step = PathStep.allCases.first(where: { health[$0] == .failing || health[$0] == .slow }) {
             let text: (String, String) = switch step {
-            case .wifi: ("Your Wi-Fi is the weak link",
-                         "The signal is weak or the link is slow. Moving closer to the router, or to a less crowded channel, helps most.")
+            case .wifi: (L10n.t("Your Wi-Fi is the weak link"),
+                         L10n.t("The signal is weak or the link is slow. Moving closer to the router, or to a less crowded channel, helps most."))
             case .router where router.loss > 0.02:
-                ("Your router is dropping packets",
-                 "\(Int((router.loss * 100).rounded()))% of pings to the router are lost, so every connection suffers. Restarting the router often helps.")
-            case .router: ("Your router is slow to answer",
-                           "Pings to the router take \(Int((router.average ?? 0).rounded())) ms, so every connection waits. Restarting the router often helps.")
-            case .isp: ("Your ISP is slow right now",
-                        "Your Wi-Fi and router are fine; the delay starts at your internet provider.")
-            case .internet: ("The internet is slow right now",
-                             "Everything up to your ISP is fine; the sites themselves are slow or far away.")
+                (L10n.t("Your router is dropping packets"),
+                 L10n.f("%ld%% of pings to the router are lost, so every connection suffers. Restarting the router often helps.",
+                        Int((router.loss * 100).rounded())))
+            case .router: (L10n.t("Your router is slow to answer"),
+                           L10n.f("Pings to the router take %ld ms, so every connection waits. Restarting the router often helps.",
+                                  Int((router.average ?? 0).rounded())))
+            case .isp: (L10n.t("Your ISP is slow right now"),
+                        L10n.t("Your Wi-Fi and router are fine; the delay starts at your internet provider."))
+            case .internet: (L10n.t("The internet is slow right now"),
+                             L10n.t("Everything up to your ISP is fine; the sites themselves are slow or far away."))
             }
             self.init(title: text.0, body: text.1, culprit: step, health: health)
         } else {
-            self.init(title: "All good", body: "\(wifiWord), router, ISP, and internet all answer quickly.",
+            self.init(title: L10n.t("All good"),
+                      body: L10n.t(wired ? "Ethernet, router, ISP, and internet all answer quickly."
+                                         : "Wi-Fi, router, ISP, and internet all answer quickly."),
                       culprit: nil, health: health)
         }
     }
@@ -137,9 +143,9 @@ public enum WiFiWords {
     /// SNR in dB: ≥ 40 excellent, ≥ 25 good, ≥ 15 fair, else poor.
     public static func signal(snr: Double) -> String {
         switch snr {
-        case 40...: "Excellent"
-        case 25...: "Good"
-        case 15...: "Fair"
+        case 40...: L10n.t("Excellent")
+        case 25...: L10n.t("Good")
+        case 15...: L10n.t("Fair")
         default: "Poor"
         }
     }
@@ -147,11 +153,11 @@ public enum WiFiWords {
     /// CWPHYMode raw values: 1 a, 2 b, 3 g, 4 n, 5 ac, 6 ax, 7 be.
     public static func standard(phyMode: Int) -> String {
         switch phyMode {
-        case 4: "Wi-Fi 4"
-        case 5: "Wi-Fi 5"
-        case 6: "Wi-Fi 6"
-        case 7: "Wi-Fi 7"
-        case 1, 2, 3: "Legacy Wi-Fi"
+        case 4: L10n.t("Wi-Fi 4")
+        case 5: L10n.t("Wi-Fi 5")
+        case 6: L10n.t("Wi-Fi 6")
+        case 7: L10n.t("Wi-Fi 7")
+        case 1, 2, 3: L10n.t("Legacy Wi-Fi")
         default: "Wi-Fi"
         }
     }
@@ -159,9 +165,9 @@ public enum WiFiWords {
     /// CWChannelBand raw values: 1 2.4 GHz, 2 5 GHz, 3 6 GHz.
     public static func band(_ raw: Int) -> String {
         switch raw {
-        case 1: "2.4 GHz"
-        case 2: "5 GHz"
-        case 3: "6 GHz"
+        case 1: L10n.t("2.4 GHz")
+        case 2: L10n.t("5 GHz")
+        case 3: L10n.t("6 GHz")
         default: "Unknown band"
         }
     }
@@ -169,10 +175,10 @@ public enum WiFiWords {
     /// CWChannelWidth raw values: 1 20, 2 40, 3 80, 4 160 MHz.
     public static func width(_ raw: Int) -> String {
         switch raw {
-        case 1: "20 MHz"
-        case 2: "40 MHz"
-        case 3: "80 MHz"
-        case 4: "160 MHz"
+        case 1: L10n.t("20 MHz")
+        case 2: L10n.t("40 MHz")
+        case 3: L10n.t("80 MHz")
+        case 4: L10n.t("160 MHz")
         default: "–"
         }
     }
@@ -252,7 +258,7 @@ public enum NetworkParse {
 
         /// "High", "Medium", or "Low" responsiveness, Apple's own bands.
         public var responsivenessWord: String? {
-            responsiveness.map { $0 >= 1000 ? "High" : $0 >= 200 ? "Medium" : "Low" }
+            responsiveness.map { L10n.t($0 >= 1000 ? "High" : $0 >= 200 ? "Medium" : "Low") }
         }
     }
 

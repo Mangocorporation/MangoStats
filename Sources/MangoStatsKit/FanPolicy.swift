@@ -8,17 +8,17 @@ public enum FanMode: Int, CaseIterable, Sendable, Identifiable {
 
     public var title: String {
         switch self {
-        case .auto: "Auto"
-        case .cool: "Cool"
-        case .max: "Max"
+        case .auto: L10n.t("Auto")
+        case .cool: L10n.t("Cool")
+        case .max: L10n.t("Max")
         }
     }
 
     public var help: String {
         switch self {
-        case .auto: "Let macOS control the fan"
-        case .cool: "Run the fan at 60 % for cooler temperatures"
-        case .max: "Run the fan at full speed"
+        case .auto: L10n.t("Let macOS control the fan")
+        case .cool: L10n.t("Run the fan at 60 % for cooler temperatures")
+        case .max: L10n.t("Run the fan at full speed")
         }
     }
 }
@@ -56,8 +56,8 @@ public enum FanPolicy {
 
     /// The Fan card's note: "Managed by macOS", "Cool · 4,800 RPM target".
     public static func note(_ mode: FanMode, min: Double, max: Double, locale: Locale = .current) -> String {
-        guard let target = target(mode, min: min, max: max) else { return "Managed by macOS" }
+        guard let target = target(mode, min: min, max: max) else { return L10n.t("Managed by macOS") }
         let rpm = target.formatted(.number.precision(.fractionLength(0)).locale(locale))
-        return "\(mode.title) · \(rpm) RPM target"
+        return L10n.f("%@ · %@ RPM target", mode.title, rpm)
     }
 }

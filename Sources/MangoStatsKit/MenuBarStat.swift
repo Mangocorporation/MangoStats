@@ -9,14 +9,14 @@ public enum MenuBarStat: String, CaseIterable, Codable, Sendable, Identifiable {
 
     public var title: String {
         switch self {
-        case .cpu: "CPU"
-        case .gpu: "GPU"
-        case .memory: "Memory"
-        case .disk: "Disk"
-        case .network: "Network"
-        case .temperature: "Temperature"
-        case .fan: "Fan"
-        case .battery: "Battery"
+        case .cpu: L10n.t("CPU")
+        case .gpu: L10n.t("GPU")
+        case .memory: L10n.t("Memory")
+        case .disk: L10n.t("Disk")
+        case .network: L10n.t("Network")
+        case .temperature: L10n.t("Temperature")
+        case .fan: L10n.t("Fan")
+        case .battery: L10n.t("Battery")
         }
     }
 }
@@ -29,8 +29,8 @@ public enum MenuBarStyle: String, CaseIterable, Codable, Sendable, Identifiable 
 
     public var title: String {
         switch self {
-        case .iconAndValue: "Icon and Value"
-        case .valueOnly: "Value Only"
+        case .iconAndValue: L10n.t("Icon and Value")
+        case .valueOnly: L10n.t("Value Only")
         }
     }
 }

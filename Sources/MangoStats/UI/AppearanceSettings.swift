@@ -1,4 +1,5 @@
 import SwiftUI
+import MangoStatsKit
 
 /// Settings > Appearance: the accent color of the whole app (design/KIT.md). MangoStats
 /// is always dark; the accent colors buttons, highlights, the memory bar, and links.
@@ -38,11 +39,11 @@ private struct AccentPreview: View {
             KitCard(height: nil, fitsContent: true, tinted: true, padding: Metric.cardPadding - 6) {
                 Eyebrow(text: "Memory is tight", icon: .warning, color: Ink.accent)
                 HStack(alignment: .center) {
-                    Text("Google Chrome is holding 19,4 GB")
+                    Text(L10n.f("%@ is holding %@", "Google Chrome", "19,4 GB"))
                         .kitType(.rowName)
                         .foregroundStyle(Ink.text)
                     Spacer()
-                    Text("Review Chrome")
+                    Text(L10n.f("Review %@", "Chrome"))
                         .kitType(.button)
                         .foregroundStyle(Ink.onAccent)
                         .padding(.horizontal, Metric.buttonPadding - 6)

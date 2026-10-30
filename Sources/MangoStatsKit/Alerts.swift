@@ -9,12 +9,12 @@ public enum AlertKind: String, CaseIterable, Sendable, Identifiable, Codable {
     /// The Settings row title.
     public var title: String {
         switch self {
-        case .memoryPressure: "Memory pressure is critical"
-        case .cpuHot: "CPU temperature above"
-        case .cpuBusy: "CPU busy above"
-        case .diskLow: "Disk space below"
-        case .batteryLow: "Battery below"
-        case .busyApp: "An app uses more than"
+        case .memoryPressure: L10n.t("Memory pressure is critical")
+        case .cpuHot: L10n.t("CPU temperature above")
+        case .cpuBusy: L10n.t("CPU busy above")
+        case .diskLow: L10n.t("Disk space below")
+        case .batteryLow: L10n.t("Battery below")
+        case .busyApp: L10n.t("An app uses more than")
         }
     }
 
@@ -203,33 +203,33 @@ public struct AlertEngine: Sendable {
     }
 
     private func event(_ kind: AlertKind, _ input: AlertInput, _ threshold: Double) -> AlertEvent {
-        let topCPU = input.topCPU.map { " Top CPU: \($0.name)." } ?? ""
+        let topCPU = input.topCPU.map { " " + L10n.f("Top CPU: %@.", $0.name) } ?? ""
         switch kind {
         case .memoryPressure:
-            let top = input.topMemory.map { " Most memory: \($0)." } ?? ""
-            return AlertEvent(kind: kind, title: "Memory pressure is critical",
-                              body: "The Mac is short on memory and may slow down. Quit apps you don't need.\(top)")
+            let top = input.topMemory.map { " " + L10n.f("Most memory: %@.", $0) } ?? ""
+            return AlertEvent(kind: kind, title: L10n.t("Memory pressure is critical"),
+                              body: L10n.t("The Mac is short on memory and may slow down. Quit apps you don't need.") + top)
         case .cpuHot:
             let temperature = Int((input.cpuTemperature ?? threshold).rounded())
-            return AlertEvent(kind: kind, title: "CPU is hot: \(temperature)°C",
-                              body: "Above \(Int(threshold))°C for a minute.\(topCPU)")
+            return AlertEvent(kind: kind, title: L10n.f("CPU is hot: %ld°C", temperature),
+                              body: L10n.f("Above %ld°C for a minute.", Int(threshold)) + topCPU)
         case .cpuBusy:
             let average = cpuSum.count > 0 ? cpuSum.total / Double(cpuSum.count) : input.cpu ?? threshold
-            return AlertEvent(kind: kind, title: "CPU busy for 5 minutes",
-                              body: "Average \(Int((average * 100).rounded())) %.\(topCPU)")
+            return AlertEvent(kind: kind, title: L10n.t("CPU busy for 5 minutes"),
+                              body: L10n.f("Average %ld %%.", Int((average * 100).rounded())) + topCPU)
         case .diskLow:
             let free = Int((Double(input.diskFree ?? 0) / 1e9).rounded())
-            return AlertEvent(kind: kind, title: "Disk space low: \(free) GB free",
-                              body: "Empty the Trash or move large files to make room.")
+            return AlertEvent(kind: kind, title: L10n.f("Disk space low: %ld GB free", free),
+                              body: L10n.t("Empty the Trash or move large files to make room."))
         case .batteryLow:
             let percent = input.battery?.percent ?? Int(threshold)
-            let left = input.battery?.minutesLeft.map { "About \(Format.duration(minutes: $0)) left. " } ?? ""
-            return AlertEvent(kind: kind, title: "Battery at \(percent) %", body: "\(left)Connect power to keep working.")
+            let left = input.battery?.minutesLeft.map { L10n.f("About %@ left.", Format.duration(minutes: $0)) + " " } ?? ""
+            return AlertEvent(kind: kind, title: L10n.f("Battery at %ld %%", percent), body: left + L10n.t("Connect power to keep working."))
         case .busyApp:
-            let name = input.topCPU?.name ?? "An app"
+            let name = input.topCPU?.name ?? L10n.t("An app")
             let cpu = Int((input.topCPU?.cpu ?? threshold).rounded())
-            return AlertEvent(kind: kind, title: "\(name) is using \(cpu) % CPU",
-                              body: "For 5 minutes. Click to see it in MangoStats.", app: name)
+            return AlertEvent(kind: kind, title: L10n.f("%@ is using %ld %% CPU", name, cpu),
+                              body: L10n.t("For 5 minutes. Click to see it in MangoStats."), app: name)
         }
     }
 }

@@ -1,4 +1,5 @@
 import SwiftUI
+import MangoStatsKit
 
 /// The process filter field (design/KIT.md, Field).
 struct KitSearchField: View {
@@ -10,7 +11,7 @@ struct KitSearchField: View {
     var body: some View {
         HStack(spacing: Metric.iconGap + 2) {
             KitIcon.search.view(size: Metric.iconSize + 1)
-            TextField(prompt, text: $text)
+            TextField(L10n.t(prompt), text: $text)
                 .textFieldStyle(.plain)
                 .kitType(.segment)
                 .foregroundStyle(Ink.text)

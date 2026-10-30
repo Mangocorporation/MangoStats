@@ -157,6 +157,19 @@ enum SelfTest {
                 check("other users' processes can't be quit", !other.ownedByUser)
             }
             check("this user's apps can be quit", status.processes.contains { $0.ownedByUser })
+            // S-051: the Portuguese table ships, and each sentence keeps the same values to fill in.
+            if let path = Bundle.main.path(forResource: "Localizable", ofType: "strings", inDirectory: nil, forLocalization: "pt-BR"),
+               let table = NSDictionary(contentsOfFile: path) as? [String: String] {
+                check("the app speaks Portuguese", table["Overview"] == "Visão Geral" && table.count > 300)
+                let specifiers = try! Regex("%(lld|ld|@|%)")
+                let broken = table.filter { key, value in
+                    key.matches(of: specifiers).map { String(key[$0.range]) }.sorted()
+                        != value.matches(of: specifiers).map { String(value[$0.range]) }.sorted()
+                }
+                check("Portuguese sentences keep their values", broken.isEmpty, broken.keys.joined(separator: ", "))
+            } else {
+                check("the app speaks Portuguese", false, "pt-BR.lproj missing from the bundle")
+            }
             print("INFO menu \(model.menuValues.sorted { $0.key.rawValue < $1.key.rawValue }.map { "\($0.key.rawValue)=\($0.value)" }.joined(separator: " "))")
             print("INFO top \(memories.joined(separator: ", ")) · battery \(status.battery) \(status.batteryState) \(status.batteryHealth) · net \(status.networkInterface) \(status.network) \(status.networkUnit)")
 

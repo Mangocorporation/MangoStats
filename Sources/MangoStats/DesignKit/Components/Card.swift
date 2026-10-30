@@ -1,4 +1,5 @@
 import SwiftUI
+import MangoStatsKit
 
 /// Where a card sits: the window's larger cards or the popover's compact ones.
 enum CardStyle {
@@ -46,7 +47,7 @@ struct CardHeader<Trailing: View>: View {
 
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: Metric.iconGap) {
-            Text(title)
+            Text(L10n.t(title))
                 .kitType(style.header)
                 .foregroundStyle(Ink.secondary)
                 .lineLimit(1)
@@ -71,7 +72,7 @@ struct KitPill: View {
     var hot = false
 
     var body: some View {
-        Text(text)
+        Text(L10n.t(text))
             .kitType(.pill)
             .foregroundStyle(hot ? Ink.hot : Ink.secondary)
             .lineLimit(1)
@@ -91,7 +92,7 @@ struct HeroValue: View {
                 .kitType(role)
                 .foregroundStyle(value == "--" ? Ink.faint : Ink.text)
             if let unit {
-                Text(unit)
+                Text(L10n.t(unit))
                     .kitType(.statUnit)
                     .foregroundStyle(Ink.secondary)
             }
@@ -106,7 +107,7 @@ struct CardFooter: View {
 
     var body: some View {
         HStack {
-            Text(leading).lineLimit(1).layoutPriority(1)
+            Text(L10n.t(leading)).lineLimit(1).layoutPriority(1)
             Spacer(minLength: Metric.iconGap)
             if let trailing { Text(trailing).lineLimit(1) }
         }
@@ -122,7 +123,7 @@ struct LivePill: View {
     var body: some View {
         HStack(spacing: Metric.iconGap) {
             Circle().fill(Ink.live).frame(width: Metric.iconGap, height: Metric.iconGap)
-            Text(text)
+            Text(L10n.t(text))
         }
         .kitType(.segment)
         .foregroundStyle(Ink.live)
@@ -141,7 +142,7 @@ struct Eyebrow: View {
     var body: some View {
         HStack(spacing: Metric.iconGap + 2) {
             if let icon { icon.view(size: Metric.iconSize + 1, color: color) }
-            Text(text).kitType(.eyebrow)
+            Text(L10n.t(text)).kitType(.eyebrow)
         }
         .foregroundStyle(color)
     }

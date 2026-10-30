@@ -83,10 +83,10 @@ public enum HistoryRange: String, CaseIterable, Sendable, Identifiable {
 
     public var title: String {
         switch self {
-        case .hour: "Hour"
-        case .day: "Day"
-        case .week: "Week"
-        case .month: "Month"
+        case .hour: L10n.t("Hour")
+        case .day: L10n.t("Day")
+        case .week: L10n.t("Week")
+        case .month: L10n.t("Month")
         }
     }
 

@@ -41,7 +41,7 @@ struct NetworkView: View {
         HStack(alignment: .center) {
             VStack(alignment: .leading, spacing: Metric.iconGap) {
                 Text("Network").kitType(.pageTitle).foregroundStyle(Ink.text)
-                Text(subtitle).kitType(.pageSubtitle).foregroundStyle(Ink.secondary)
+                Text(L10n.t(subtitle)).kitType(.pageSubtitle).foregroundStyle(Ink.secondary)
             }
             Spacer()
             LivePill(text: "Live · every 2 s")
@@ -59,9 +59,9 @@ struct NetworkView: View {
 
     private var subtitle: String {
         var parts: [String] = [monitor.wifi?.connected == true ? "Wi-Fi" : "Ethernet"]
-        if let ms = monitor.router.average { parts.append("router \(Self.ms(ms))") }
-        if let ms = monitor.internet.average { parts.append("internet \(Self.ms(ms))") }
-        return parts.count == 1 ? "Measuring…" : parts.joined(separator: " · ")
+        if let ms = monitor.router.average { parts.append(L10n.f("router %@", Self.ms(ms))) }
+        if let ms = monitor.internet.average { parts.append(L10n.f("internet %@", Self.ms(ms))) }
+        return parts.count == 1 ? L10n.t("Measuring…") : parts.joined(separator: " · ")
     }
 
     static func ms(_ value: Double) -> String { "\(Format.number(value, digits: value < 10 ? 1 : 0)) ms" }
@@ -79,16 +79,16 @@ private struct VerdictCard: View {
         KitCard(height: nil, fitsContent: true, tinted: !calm, padding: Metric.insightPadding) {
             Eyebrow(text: calm ? "Connection" : "Worth a look", icon: calm ? .health : .warning,
                     color: calm ? Ink.live : Ink.accent)
-            Text(monitor.router.samples.isEmpty ? "Checking your network…" : verdict.title)
+            Text(monitor.router.samples.isEmpty ? L10n.t("Checking your network…") : verdict.title)
                 .kitType(.insightTitle)
                 .foregroundStyle(Ink.text)
                 .padding(.top, Metric.cardGap - 2)
-            Text(monitor.router.samples.isEmpty ? "Pinging your router and the internet." : verdict.body)
+            Text(monitor.router.samples.isEmpty ? L10n.t("Pinging your router and the internet.") : verdict.body)
                 .kitType(.body)
                 .foregroundStyle(Ink.body)
                 .padding(.top, Metric.iconGap)
             if let heavy = monitor.heavyApp {
-                Text(HeavyTraffic.sentence(heavy) + ", using most of your bandwidth.")
+                Text(L10n.f("%@, using most of your bandwidth.", HeavyTraffic.sentence(heavy)))
                     .kitType(.body)
                     .foregroundStyle(Ink.accent)
                     .padding(.top, Metric.iconGap)
@@ -113,7 +113,7 @@ private struct PathDiagram: View {
                  health: .good)
             link(health[.wifi] ?? .unknown)
             node(wired ? "Ethernet" : "Wi-Fi", icon: .network,
-                 detail: monitor.wifi.map { $0.connected ? "\(WiFiWords.signal(snr: $0.snr)) · \(Int($0.snr)) dB SNR" : "Not connected" } ?? "Cable",
+                 detail: monitor.wifi.map { $0.connected ? L10n.f("%@ · %ld dB SNR", WiFiWords.signal(snr: $0.snr), Int($0.snr)) : "Not connected" } ?? "Cable",
                  health: health[.wifi] ?? .unknown)
             link(health[.router] ?? .unknown)
             node("Router", icon: .storage, detail: latency(monitor.router), health: health[.router] ?? .unknown)
@@ -127,7 +127,7 @@ private struct PathDiagram: View {
 
     private func latency(_ stats: LatencyStats) -> String {
         guard let average = stats.average else { return stats.samples.isEmpty ? "–" : "No answer" }
-        let loss = stats.loss > 0 ? " · \(NetworkView.percent(stats.loss)) lost" : ""
+        let loss = stats.loss > 0 ? " · " + L10n.f("%@ lost", NetworkView.percent(stats.loss)) : ""
         return NetworkView.ms(average) + loss
     }
 
@@ -138,8 +138,8 @@ private struct PathDiagram: View {
                 .overlay(Circle().strokeBorder(color(health), lineWidth: Metric.lineWidth))
                 .overlay(icon.view(size: Metric.iconSize + 2, color: color(health)))
                 .frame(width: Metric.iconButton, height: Metric.iconButton)
-            Text(title).kitType(.statLabel).foregroundStyle(Ink.text)
-            Text(detail).kitType(.mono).foregroundStyle(Ink.secondary).lineLimit(1)
+            Text(L10n.t(title)).kitType(.statLabel).foregroundStyle(Ink.text)
+            Text(L10n.t(detail)).kitType(.mono).foregroundStyle(Ink.secondary).lineLimit(1)
         }
         .frame(maxWidth: .infinity)
         .accessibilityElement(children: .combine)
@@ -183,7 +183,7 @@ private struct InfoRow: View {
 
     var body: some View {
         HStack(alignment: .firstTextBaseline) {
-            Text(label).kitType(.statLabel).foregroundStyle(Ink.secondary)
+            Text(L10n.t(label)).kitType(.statLabel).foregroundStyle(Ink.secondary)
             Spacer(minLength: Metric.cardGap)
             Text(value).kitType(.mono).foregroundStyle(highlight ? Ink.accent : Ink.body)
                 .lineLimit(1).truncationMode(.middle)
@@ -205,7 +205,7 @@ private struct RouterCard: View {
                 InfoRow(label: "Jitter", value: monitor.router.jitter.map(NetworkView.ms) ?? "–")
                 InfoRow(label: "Loss", value: NetworkView.percent(monitor.router.loss), highlight: monitor.router.loss > 0.02)
                 InfoRow(label: "DHCP lease", value: monitor.leaseSeconds.map { Format.duration(minutes: $0 / 60) } ?? "–")
-                InfoRow(label: "Also your DNS", value: monitor.gateway.map { gw in monitor.dns.contains { $0.server == gw } ? "Yes" : "No" } ?? "–")
+                InfoRow(label: "Also your DNS", value: monitor.gateway.map { gw in monitor.dns.contains { $0.server == gw } ? L10n.t("Yes") : L10n.t("No") } ?? "–")
                 InfoRow(label: "Model", value: model)
             }
             .padding(.top, Metric.cardGap)
@@ -225,7 +225,7 @@ private struct WiFiCard: View {
         KitCard(height: nil, fitsContent: true) {
             if let wifi = monitor.wifi, wifi.connected {
                 CardHeader(title: "Wi-Fi", detail: WiFiWords.standard(phyMode: wifi.phyMode))
-                HeroValue(value: WiFiWords.signal(snr: wifi.snr), unit: "\(Int(wifi.snr)) dB SNR")
+                HeroValue(value: WiFiWords.signal(snr: wifi.snr), unit: L10n.f("%ld dB SNR", Int(wifi.snr)))
                     .padding(.top, Metric.heroTop)
                 VStack(spacing: 0) {
                     HStack {
@@ -363,7 +363,7 @@ private struct AppTrafficCard: View {
         KitCard(height: nil, fitsContent: true) {
             CardHeader(title: "Apps using the network", detail: total)
             if monitor.appTraffic.isEmpty {
-                Text(monitor.running ? "Nothing is using the network right now." : "Measuring…")
+                Text(monitor.running ? "Nothing is using the network right now." : "Measuring…" as LocalizedStringKey)
                     .kitType(.body).foregroundStyle(Ink.body)
                     .padding(.top, Metric.heroTop)
             } else {
@@ -416,7 +416,7 @@ private struct DevicesCard: View {
 
     var body: some View {
         KitCard(height: nil, fitsContent: true) {
-            CardHeader(title: "Devices", detail: monitor.devices.isEmpty ? nil : "\(monitor.devices.count) seen")
+            CardHeader(title: "Devices", detail: monitor.devices.isEmpty ? nil : L10n.f("%ld seen", monitor.devices.count))
             if monitor.devices.isEmpty {
                 Text("Devices appear here as your Mac talks to them. Names come from devices that announce themselves, like printers, speakers, and other Macs.")
                     .kitType(.body).foregroundStyle(Ink.body)
@@ -432,9 +432,9 @@ private struct DevicesCard: View {
                                 .background(device.isRouter ? Ink.accent : Ink.pillFill,
                                             in: RoundedRectangle(cornerRadius: Metric.avatarRadius - 2, style: .continuous))
                             VStack(alignment: .leading, spacing: 1) {
-                                Text(device.name ?? (device.isRouter ? "Router" : device.vendor ?? "Unknown device"))
+                                Text(device.name ?? (device.isRouter ? L10n.t("Router") : device.vendor ?? L10n.t("Unknown device")))
                                     .kitType(.rowName).foregroundStyle(Ink.text).lineLimit(1)
-                                Text(device.isRouter ? (device.vendor ?? "Your router") : device.name == nil ? "Doesn't announce a name" : (device.vendor ?? ""))
+                                Text(device.isRouter ? (device.vendor ?? L10n.t("Your router")) : device.name == nil ? L10n.t("Doesn't announce a name") : (device.vendor ?? ""))
                                     .kitType(.rowKind).foregroundStyle(Ink.secondary).lineLimit(1)
                             }
                             Spacer()

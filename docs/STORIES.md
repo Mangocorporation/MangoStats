@@ -653,7 +653,8 @@ Acceptance:
 - [unit] Insight, verdict, and alert sentences come from the String Catalog in both languages.
 - [snap] Every page snapshotted in pt-BR (APP_LANGUAGE=pt-BR); no English left, no clipped text.
 - [manual] The glossary has a pt-BR column, so the same thing always has the same name.
-Status: todo
+Note: a .strings file per language instead of a String Catalog (no Xcode project to compile one). Kit sentences go through `L10n` (formats, so word order can change); SwiftUI literals are looked up by the system. `[self]` checks the table ships and keeps every %@/%ld; `tools/l10n-missing.py` lists untranslated UI text (0 of 455).
+Status: done
 
 ## M16 Network tab, round two
 

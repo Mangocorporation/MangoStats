@@ -173,7 +173,7 @@ private struct PopStorage: View {
         } label: {
             KitCard(style: .popover) {
                 CardHeader(title: "Storage", detail: data.diskTotal, style: .popover)
-                HeroValue(value: data.diskFree, unit: "\(data.diskFreeUnit) free", role: .popValue)
+                HeroValue(value: data.diskFree, unit: L10n.f("%@ free", data.diskFreeUnit), role: .popValue)
                     .padding(.top, Metric.iconGap)
                 Spacer(minLength: 0)
                 KitProgressBar(value: data.diskUsed, fill: data.diskUsed > 0.9 ? Ink.accent : Ink.disk,

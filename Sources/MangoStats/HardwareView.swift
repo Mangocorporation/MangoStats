@@ -14,7 +14,7 @@ struct HardwareView: View {
             VStack(alignment: .leading, spacing: Metric.sectionGap) {
                 VStack(alignment: .leading, spacing: Metric.iconGap) {
                     Text("Hardware").kitType(.pageTitle).foregroundStyle(Ink.text)
-                    Text(data.hasBattery ? "Battery and storage" : "Storage")
+                    Text(L10n.t(data.hasBattery ? "Battery and storage" : "Storage"))
                         .kitType(.pageSubtitle).foregroundStyle(Ink.secondary)
                 }
                 if data.hasBattery {
@@ -45,7 +45,7 @@ private struct DetailRow: View {
 
     var body: some View {
         HStack(alignment: .firstTextBaseline) {
-            Text(label).kitType(.statLabel).foregroundStyle(Ink.secondary)
+            Text(L10n.t(label)).kitType(.statLabel).foregroundStyle(Ink.secondary)
             Spacer(minLength: Metric.cardGap)
             Text(value).kitType(.mono).foregroundStyle(Ink.body).lineLimit(1)
         }
@@ -60,7 +60,7 @@ private struct BatteryDetailCard: View {
     var body: some View {
         KitCard(height: nil, fitsContent: true, padding: Metric.insightPadding) {
             CardHeader(title: "Battery", detail: data.batteryCondition.lowercased(),
-                       hot: data.batteryCondition != "Normal")
+                       hot: data.batteryServiceRecommended)
             HeroValue(value: data.batteryHealth.components(separatedBy: "%").first ?? "--", unit: "% health")
                 .padding(.top, Metric.heroTop)
             VStack(spacing: 0) {
@@ -200,7 +200,7 @@ private struct DiskActivityCard: View {
     private func legend(_ title: String, _ color: Color) -> some View {
         HStack(spacing: Metric.iconGap) {
             Capsule().fill(color).frame(width: Metric.cardPadding / 2, height: Metric.legendStroke)
-            Text(title).kitType(.pill).foregroundStyle(Ink.secondary)
+            Text(L10n.t(title)).kitType(.pill).foregroundStyle(Ink.secondary)
         }
     }
 

@@ -21,7 +21,7 @@ struct FanModeMenu: View {
             }
         } label: {
             HStack(spacing: 2) {
-                Text(fan.applied == fan.wanted ? fan.wanted.title : "\(fan.applied.title) (hot)")
+                Text(fan.applied == fan.wanted ? fan.wanted.title : L10n.f("%@ (hot)", fan.applied.title))
                 KitIcon.sortDown.view(size: 7, color: Ink.secondary)
             }
             .kitType(.pill)

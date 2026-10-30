@@ -45,10 +45,10 @@ enum SettingsTab: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .general: "General"
-        case .menuBar: "Menu Bar"
-        case .alerts: "Alerts"
-        case .appearance: "Appearance"
+        case .general: L10n.t("General")
+        case .menuBar: L10n.t("Menu Bar")
+        case .alerts: L10n.t("Alerts")
+        case .appearance: L10n.t("Appearance")
         }
     }
 
@@ -103,7 +103,7 @@ struct GeneralSettings: View {
             try LoginItem.set(on)
             loginError = nil
         } catch {
-            loginError = "Unable to change the login item: \(error.localizedDescription)"
+            loginError = L10n.f("Unable to change the login item: %@", error.localizedDescription)
         }
         openAtLogin = LoginItem.isEnabled
     }
@@ -229,7 +229,7 @@ struct FanControlSection: View {
 
     var body: some View {
         Section("Fan control") {
-            Text(message).foregroundStyle(.secondary)
+            Text(L10n.t(message)).foregroundStyle(.secondary)
             if let error = fan.error {
                 Text(error).foregroundStyle(.red)
             }

@@ -17,8 +17,10 @@ public struct Insight: Equatable, Sendable {
 
     public var isCalm: Bool { kind == .calm }
 
-    public static let calm = Insight(kind: .calm, eyebrow: "All good", title: "Nothing needs a look",
-                                     body: "Memory, storage, and temperatures are fine.", app: nil)
+    public static var calm: Insight {
+        Insight(kind: .calm, eyebrow: L10n.t("All good"), title: L10n.t("Nothing needs a look"),
+                body: L10n.t("Memory, storage, and temperatures are fine."), app: nil)
+    }
 
     public init(kind: Kind, eyebrow: String, title: String, body: String, app: String?) {
         self.kind = kind
@@ -61,37 +63,39 @@ public struct Insight: Equatable, Sendable {
         var found: [Insight] = []
         let percent = Int((input.memoryFraction * 100).rounded())
         if input.pressure != .normal || input.memoryFraction >= 0.85 || input.swap > 2 << 30 {
-            let swap = input.swap > 0
-                ? " and macOS has moved \(Format.bytes(input.swap, digits: 2, locale: locale)) to swap" : ""
+            let full = input.swap > 0
+                ? L10n.f("Memory is %ld%% full and macOS has moved %@ to swap.", percent, Format.bytes(input.swap, digits: 2, locale: locale))
+                : L10n.f("Memory is %ld%% full.", percent)
+            let advice = L10n.t("Quitting what you aren't using is the quickest way to get memory back.")
             if let top = input.topMemory {
-                found.append(Insight(kind: .memory, eyebrow: "Memory is tight",
-                                     title: "\(top.name) is holding \(Format.bytes(top.bytes, digits: 1, locale: locale))",
-                                     body: "Memory is \(percent)% full\(swap). Quitting what you aren't using is the quickest way to get memory back.",
-                                     app: top.name))
+                found.append(Insight(kind: .memory, eyebrow: L10n.t("Memory is tight"),
+                                     title: L10n.f("%@ is holding %@", top.name, Format.bytes(top.bytes, digits: 1, locale: locale)),
+                                     body: full + " " + advice, app: top.name))
             } else {
-                found.append(Insight(kind: .memory, eyebrow: "Memory is tight", title: "Memory is \(percent)% full",
-                                     body: "Quitting what you aren't using is the quickest way to get memory back.", app: nil))
+                found.append(Insight(kind: .memory, eyebrow: L10n.t("Memory is tight"),
+                                     title: L10n.f("Memory is %ld%% full", percent), body: advice, app: nil))
             }
         }
         if let temperature = input.cpuTemperature, temperature >= 90 {
-            let culprit = input.topCPU.map { " \($0.name) is using the most CPU." } ?? ""
-            found.append(Insight(kind: .hot, eyebrow: "Running hot", title: "CPU is at \(Int(temperature.rounded()))°C",
-                                 body: "The Mac may slow down to cool off.\(culprit)", app: input.topCPU?.name))
+            let culprit = input.topCPU.map { " " + L10n.f("%@ is using the most CPU.", $0.name) } ?? ""
+            found.append(Insight(kind: .hot, eyebrow: L10n.t("Running hot"),
+                                 title: L10n.f("CPU is at %ld°C", Int(temperature.rounded())),
+                                 body: L10n.t("The Mac may slow down to cool off.") + culprit, app: input.topCPU?.name))
         }
         if let top = input.topCPU, top.cpu >= 80 {
-            found.append(Insight(kind: .busyApp, eyebrow: "Busy app",
-                                 title: "\(top.name) is using \(Int(top.cpu.rounded()))% CPU",
-                                 body: "If it isn't doing something you asked for, quitting it gives the time back.",
+            found.append(Insight(kind: .busyApp, eyebrow: L10n.t("Busy app"),
+                                 title: L10n.f("%@ is using %ld%% CPU", top.name, Int(top.cpu.rounded())),
+                                 body: L10n.t("If it isn't doing something you asked for, quitting it gives the time back."),
                                  app: top.name))
         }
         if let free = input.diskFree, let total = input.diskTotal, total > 0, Double(free) / Double(total) < 0.10 {
-            found.append(Insight(kind: .disk, eyebrow: "Storage is filling up",
-                                 title: "\(Format.bytes(free, binary: false, digits: 0, locale: locale)) free",
-                                 body: "Below 10% free, macOS can't keep caches and updates may fail.", app: nil))
+            found.append(Insight(kind: .disk, eyebrow: L10n.t("Storage is filling up"),
+                                 title: L10n.f("%@ free", Format.bytes(free, binary: false, digits: 0, locale: locale)),
+                                 body: L10n.t("Below 10% free, macOS can't keep caches and updates may fail."), app: nil))
         }
         if let battery = input.battery, battery.onBattery, battery.percent <= 20 {
-            found.append(Insight(kind: .battery, eyebrow: "Battery is low", title: "\(battery.percent)% left",
-                                 body: "Connect power to keep working.", app: nil))
+            found.append(Insight(kind: .battery, eyebrow: L10n.t("Battery is low"), title: L10n.f("%ld%% left", battery.percent),
+                                 body: L10n.t("Connect power to keep working."), app: nil))
         }
         return found
     }

@@ -22,6 +22,7 @@ Shape: a `MenuBarExtra` (window style) with the popover, a Status window
 - After every UI change, take snapshots with sample data and look at them: `tools/snap.sh`.
   It writes `/tmp/MangoStats-shots/popover-*.png` (the menu bar popover in a stand-in panel), `status-*.png`, and `settings-<tab>-*.png`, light and dark, then quits. `APP_SNAPSHOT_PAGES=popover,settings tools/snap.sh` limits the pages.
 - Snapshots and the self-test refuse to run without `APP_STORE`; with it, settings go to the throwaway `com.mangocorp.mangostats.test` domain. Never change the real settings in tests.
+- Languages: English and Brazilian Portuguese. New UI text needs a line in `Resources/pt-BR.lproj/Localizable.strings`: `tools/l10n-missing.py` prints PASS when none is missing. Kit sentences use `L10n.t`/`L10n.f` (formats, never concatenated words). Look at `APP_LANGUAGE=pt-BR tools/snap.sh` for clipped text.
 - Then check the grid: `tools/grid-lint.sh` and `swift tools/check-layout.swift /tmp/MangoStats-shots/*-layout.json`. Both print PASS.
 - A change is done when the build has no errors, the grid checks pass, and you looked at the light and dark snapshots.
 

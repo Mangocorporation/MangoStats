@@ -46,9 +46,9 @@ public enum CPUUsage {
     /// "idle" under 20 %, "normal" up to 60 %, "busy" above (S-003).
     public static func label(_ fraction: Double) -> String {
         switch fraction {
-        case ..<0.2: "idle"
-        case ...0.6: "normal"
-        default: "busy"
+        case ..<0.2: L10n.t("idle")
+        case ...0.6: L10n.t("normal")
+        default: L10n.t("busy")
         }
     }
 }
@@ -63,9 +63,9 @@ public enum MemoryPressure: Int, Sendable {
 
     public var title: String {
         switch self {
-        case .normal: "Normal"
-        case .warning: "Warning"
-        case .critical: "Critical"
+        case .normal: L10n.t("Normal")
+        case .warning: L10n.t("Warning")
+        case .critical: L10n.t("Critical")
         }
     }
 }
@@ -73,11 +73,11 @@ public enum MemoryPressure: Int, Sendable {
 /// How fast the internet answers (S-006).
 public enum Latency {
     public static func label(milliseconds: Double?) -> String {
-        guard let milliseconds else { return "Offline" }
+        guard let milliseconds else { return L10n.t("Offline") }
         switch milliseconds {
-        case ..<50: return "Low Lag"
-        case ..<150: return "Medium Lag"
-        default: return "High Lag"
+        case ..<50: return L10n.t("Low Lag")
+        case ..<150: return L10n.t("Medium Lag")
+        default: return L10n.t("High Lag")
         }
     }
 }
@@ -125,9 +125,9 @@ public struct Health: Equatable, Sendable {
 
     public var word: String {
         switch score {
-        case 80...: "Good"
-        case 60...: "Fair"
-        default: "Poor"
+        case 80...: L10n.t("Good")
+        case 60...: L10n.t("Fair")
+        default: L10n.t("Poor")
         }
     }
 
@@ -135,28 +135,28 @@ public struct Health: Equatable, Sendable {
         var score = 100
         var reasons: [String] = []
         switch input.pressure {
-        case .warning: score -= 15; reasons.append("Memory pressure high")
-        case .critical: score -= 30; reasons.append("Memory pressure critical")
+        case .warning: score -= 15; reasons.append(L10n.t("Memory pressure high"))
+        case .critical: score -= 30; reasons.append(L10n.t("Memory pressure critical"))
         case .normal: break
         }
         if input.diskFreeFraction < 0.10 {
             score -= 20
-            reasons.append("Disk space very low · \(Format.bytes(input.diskFreeBytes, binary: false, digits: 0, locale: locale)) Free")
+            reasons.append(L10n.f("Disk space very low · %@ free", Format.bytes(input.diskFreeBytes, binary: false, digits: 0, locale: locale)))
         } else if input.diskFreeFraction < 0.25 {
             score -= 10
-            reasons.append("Disk space low · \(Format.bytes(input.diskFreeBytes, binary: false, digits: 0, locale: locale)) Free")
+            reasons.append(L10n.f("Disk space low · %@ free", Format.bytes(input.diskFreeBytes, binary: false, digits: 0, locale: locale)))
         }
         if input.swapBytes > 2 << 30 {
             score -= 6
-            reasons.append("Using swap")
+            reasons.append(L10n.t("Using swap"))
         }
         if let temperature = input.cpuTemperature, temperature > 90 {
             score -= 15
-            reasons.append("CPU hot")
+            reasons.append(L10n.t("CPU hot"))
         }
         if input.sustainedCPU > 0.8 {
             score -= 10
-            reasons.append("CPU busy for a minute")
+            reasons.append(L10n.t("CPU busy for a minute"))
         }
         self.score = max(0, score)
         self.reasons = reasons
@@ -192,10 +192,10 @@ public enum Format {
         let minutes = Int(seconds) / 60
         let days = minutes / 1440
         let hours = minutes % 1440 / 60
-        func plural(_ n: Int, _ word: String) -> String { "\(n) \(word)\(n == 1 ? "" : "s")" }
-        if days > 0 { return "up \(plural(days, "day")), \(plural(hours, "hr"))" }
-        if hours > 0 { return "up \(plural(hours, "hr")), \(plural(minutes % 60, "min"))" }
-        return "up \(plural(minutes, "min"))"
+        func part(_ n: Int, _ one: String, _ many: String) -> String { L10n.f(n == 1 ? one : many, n) }
+        if days > 0 { return L10n.f("up %@, %@", part(days, "%ld day", "%ld days"), part(hours, "%ld hr", "%ld hrs")) }
+        if hours > 0 { return L10n.f("up %@, %@", part(hours, "%ld hr", "%ld hrs"), part(minutes % 60, "%ld min", "%ld mins")) }
+        return L10n.f("up %@", part(minutes, "%ld min", "%ld mins"))
     }
 
     /// "0.9W", "12W": one decimal under 10 W.

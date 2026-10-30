@@ -96,7 +96,7 @@ func health() {
     // The reference: 20 % free and 6.6 GB swap -> 84 Good, "Disk space low · 99 GB Free".
     let reference = Health(input(free: 0.2, swap: 7 << 30), locale: Locale(identifier: "en_US"))
     #expect(reference.score == 84)
-    #expect(reference.reasons.first == "Disk space low · 99 GB Free")
+    #expect(reference.reasons.first == "Disk space low · 99 GB free")
     #expect(Health(input(pressure: .critical, free: 0.05, temperature: 99, cpu: 0.95)).word == "Poor")
 }
 

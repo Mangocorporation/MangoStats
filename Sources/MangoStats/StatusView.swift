@@ -89,7 +89,7 @@ struct OverviewView: View {
                     .help(data.healthReasons.isEmpty ? "Nothing needs attention" : data.healthReasons.joined(separator: "\n"))
             }
             Spacer()
-            LivePill(text: "Live · every \(model.refreshInterval) s")
+            LivePill(text: L10n.f("Live · every %ld s", model.refreshInterval))
             Button("Settings…", systemImage: KitIcon.settings.symbol) {
                 NSApp.activate()
                 openSettings()

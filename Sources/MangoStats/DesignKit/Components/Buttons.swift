@@ -1,4 +1,5 @@
 import SwiftUI
+import MangoStatsKit
 
 /// Filled accent button: "Review Chrome" (design/KIT.md, Buttons).
 struct PrimaryButtonStyle: ButtonStyle {
@@ -141,7 +142,7 @@ struct KitSegmented<Option: Hashable>: View {
     var body: some View {
         HStack(spacing: 0) {
             ForEach(options, id: \.self) { option in
-                Button(title(option)) { selection = option }
+                Button(L10n.t(title(option))) { selection = option }
                     .buttonStyle(SegmentButtonStyle(selected: option == selection))
                     .help(help(option))
                     .accessibilityAddTraits(option == selection ? .isSelected : [])

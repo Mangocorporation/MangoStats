@@ -119,8 +119,8 @@ final class AppModel {
         var all = status.insights
         if let heavy = NetworkMonitor.shared.heavyApp {
             let words = HeavyTraffic.sentence(heavy)
-            all.append(Insight(kind: .network, eyebrow: "Network is busy", title: words,
-                               body: "It's using most of your bandwidth, so everything else on the network may feel slow.",
+            all.append(Insight(kind: .network, eyebrow: L10n.t("Network is busy"), title: words,
+                               body: L10n.t("It's using most of your bandwidth, so everything else on the network may feel slow."),
                                app: heavy.name))
         }
         return all
@@ -133,10 +133,10 @@ final class AppModel {
 
     /// "Health 84 · Good — 2 things worth a look".
     var healthLine: String {
-        guard status.health != "--" else { return "Measuring…" }
+        guard status.health != "--" else { return L10n.t("Measuring…") }
         let open = insights.filter { !dismissedInsights.contains(Self.key($0)) }.count
-        let worth = open == 0 ? "nothing needs a look" : open == 1 ? "1 thing worth a look" : "\(open) things worth a look"
-        return "Health \(status.health) · \(status.healthWord) — \(worth)"
+        let worth = open == 0 ? L10n.t("nothing needs a look") : open == 1 ? L10n.t("1 thing worth a look") : L10n.f("%ld things worth a look", open)
+        return L10n.f("Health %@ · %@ — %@", status.health, status.healthWord, worth)
     }
 
     /// "Review Chrome": show that app at the top of the process list.
@@ -169,7 +169,7 @@ final class AppModel {
     }
 
     func unavailableReason(_ stat: MenuBarStat) -> String {
-        "Not available on this Mac"
+        L10n.t("Not available on this Mac")
     }
 
     func setShown(_ stat: MenuBarStat, _ shown: Bool) {

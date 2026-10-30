@@ -220,7 +220,7 @@ final class NetworkMonitor {
         }
         misses += 1
         if misses == 5 {
-            let what = routerUp ? "Internet unreachable" : "Router unreachable"
+            let what = routerUp ? "Internet unreachable" : "Router unreachable"  // stored; translated when shown
             outages.append(Outage(start: Date.now.addingTimeInterval(-10), end: nil, what: what))
         }
     }

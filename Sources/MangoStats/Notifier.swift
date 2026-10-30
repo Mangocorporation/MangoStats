@@ -61,8 +61,8 @@ final class Notifier: NSObject, UNUserNotificationCenterDelegate {
     }
 
     func sendTest() {
-        post(AlertEvent(kind: .cpuHot, title: "MangoStats alerts are on",
-                        body: "You'll see an alert like this when something needs attention."))
+        post(AlertEvent(kind: .cpuHot, title: L10n.t("MangoStats alerts are on"),
+                        body: L10n.t("You'll see an alert like this when something needs attention.")))
     }
 
     static func openNotificationSettings() {

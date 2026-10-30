@@ -51,7 +51,7 @@ final class FanControl {
             try service.register()
             error = nil
         } catch {
-            self.error = "Unable to install the helper: \(error.localizedDescription)"
+            self.error = L10n.f("Unable to install the helper: %@", error.localizedDescription)
         }
         refresh()
         if state == .needsApproval { SMAppService.openSystemSettingsLoginItems() }
@@ -87,7 +87,7 @@ final class FanControl {
             Task { @MainActor in
                 let applied = FanMode(rawValue: mode) ?? .auto
                 if applied != self.applied { self.applied = applied }
-                let message = error.map { "Unable to set the fan: \($0)" }
+                let message = error.map { L10n.f("Unable to set the fan: %@", $0) }
                 if message != self.error { self.error = message }
                 if error != nil { self.wanted = .auto }
             }
@@ -107,7 +107,7 @@ final class FanControl {
         guard let connection = connect() else { return nil }
         return connection.remoteObjectProxyWithErrorHandler { [weak self] error in
             Task { @MainActor in
-                self?.error = "Unable to reach the fan helper: \(error.localizedDescription)"
+                self?.error = L10n.f("Unable to reach the fan helper: %@", error.localizedDescription)
                 self?.connection = nil
             }
         } as? FanHelperProtocol

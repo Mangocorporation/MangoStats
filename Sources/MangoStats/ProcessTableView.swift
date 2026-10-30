@@ -61,12 +61,12 @@ struct ProcessTableView: View {
             }
             Spacer()
             KitSegmented(options: ProcessKind.allCases, selection: $model.processKind, title: \.title,
-                         help: { "Show \($0 == .all ? "every process" : $0.title.lowercased())" })
+                         help: { $0 == .all ? L10n.t("Show every process") : L10n.f("Show %@", $0.title.lowercased()) })
             KitSegmented(options: [ProcessColumn.cpu, .memory],
                          selection: Binding(get: { model.processSort.column == .memory ? .memory : .cpu },
                                             set: { model.processSort = ProcessSort(column: $0, descending: true) }),
                          title: { $0 == .cpu ? "CPU" : "Memory" },
-                         help: { "Sort by \($0 == .cpu ? "CPU" : "memory")" })
+                         help: { L10n.t($0 == .cpu ? "Sort by CPU" : "Sort by memory") })
             KitSearchField(text: $model.processQuery, prompt: "Filter", focused: $filterFocused) {
                 model.processQuery = ""
                 filterFocused = false
@@ -101,10 +101,10 @@ struct ProcessTableView: View {
 
     private func sortButton(_ title: String, _ column: ProcessColumn) -> some View {
         let active = model.processSort.column == column
-        return Button(title) { model.processSort.select(column) }
+        return Button(L10n.t(title)) { model.processSort.select(column) }
             .buttonStyle(ColumnHeaderButtonStyle(active: active, descending: model.processSort.descending))
-            .help("Sort by \(title.lowercased())")
-            .accessibilityValue(active ? (model.processSort.descending ? "sorted descending" : "sorted ascending") : "")
+            .help(L10n.f("Sort by %@", L10n.t(title).lowercased()))
+            .accessibilityValue(active ? L10n.t(model.processSort.descending ? "sorted descending" : "sorted ascending") : "")
     }
 
     private func footer(shown: Int, total: Int, filtering: Bool) -> some View {
@@ -127,7 +127,7 @@ struct ProcessTableView: View {
     }
 
     private func message(_ text: String) -> some View {
-        Text(text)
+        Text(L10n.t(text))
             .kitType(.footer)
             .foregroundStyle(Ink.secondary)
             .frame(maxWidth: .infinity, minHeight: Metric.rowHeight, alignment: .leading)
