@@ -39,5 +39,6 @@ curl -sfIL -o /dev/null "https://github.com/Mangocorporation/$name/releases/down
 
 git -C "$here" add site/appcast.xml "$notes"
 git -C "$here" commit -m "Offer $name $version in Check for Updates" >/dev/null
-git -C "$here" push
+# Push with gh's login: a fine-grained keychain token may not cover this repo.
+git -C "$here" -c credential.helper= -c 'credential.helper=!gh auth git-credential' push
 print "published $version: the release is on GitHub, and the feed goes live when the Pages deploy finishes"
