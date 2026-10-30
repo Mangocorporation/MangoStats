@@ -267,6 +267,12 @@ private struct ProcessTable: View {
                 .padding(.trailing, Metric.iconGap)
             ScrollView {
                 LazyVStack(spacing: 0) {
+                    if data.processes.isEmpty {
+                        Text("Reading processes…")
+                            .kitType(.footer)
+                            .foregroundStyle(Ink.secondary)
+                            .frame(maxWidth: .infinity, minHeight: Metric.rowHeight, alignment: .leading)
+                    }
                     ForEach(data.processes, id: \.self) { process in
                         ProcessRow(process: process)
                             .padding(.trailing, Metric.iconGap)
