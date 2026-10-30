@@ -35,11 +35,13 @@ final class FanControl {
 
     func refresh() {
         guard allowed else { return }
-        switch service.status {
-        case .enabled: state = .on
-        case .requiresApproval: state = .needsApproval
-        default: state = .off
+        // Assign only on change: every write wakes the views that observe it.
+        let next: State = switch service.status {
+        case .enabled: .on
+        case .requiresApproval: .needsApproval
+        default: .off
         }
+        if next != state { state = next }
     }
 
     /// "Allow Fan Control…": registers the helper; macOS asks for approval in Login Items.
@@ -78,13 +80,15 @@ final class FanControl {
     func tick() {
         refresh()
         guard state == .on, let proxy = proxy() else {
-            applied = .auto
+            if applied != .auto { applied = .auto }
             return
         }
         proxy.request(wanted.rawValue) { mode, error in
             Task { @MainActor in
-                self.applied = FanMode(rawValue: mode) ?? .auto
-                self.error = error.map { "Unable to set the fan: \($0)" }
+                let applied = FanMode(rawValue: mode) ?? .auto
+                if applied != self.applied { self.applied = applied }
+                let message = error.map { "Unable to set the fan: \($0)" }
+                if message != self.error { self.error = message }
                 if error != nil { self.wanted = .auto }
             }
         }

@@ -124,7 +124,6 @@ private struct HealthHeader: View {
                     Text(data.health)
                         .kitType(.health)
                         .foregroundStyle(data.health == "--" ? Ink.secondary : Ink.text)
-                        .contentTransition(.numericText())
                     Text(data.healthWord).kitType(.healthWord).foregroundStyle(Ink.label)
                 }
             }

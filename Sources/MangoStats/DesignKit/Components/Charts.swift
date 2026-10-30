@@ -19,7 +19,6 @@ struct BarHistory: View {
             }
         }
         .frame(height: Metric.barHeight, alignment: .bottom)
-        .animation(Motion.value, value: values)
         .accessibilityHidden(true)
     }
 }
@@ -101,7 +100,6 @@ struct KitProgressBar: View {
                 }
         }
         .frame(height: Metric.progressHeight)
-        .animation(Motion.value, value: value)
         .accessibilityElement()
         .accessibilityValue(Text(value, format: .percent.precision(.fractionLength(0))))
     }

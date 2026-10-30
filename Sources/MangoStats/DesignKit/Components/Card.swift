@@ -71,7 +71,6 @@ struct HeroValue: View {
             Text(value)
                 .kitType(role)
                 .foregroundStyle(value == "--" ? Ink.secondary : Ink.text)
-                .contentTransition(.numericText())
             if let unit {
                 Text(unit)
                     .kitType(.unit)
