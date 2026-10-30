@@ -9,5 +9,31 @@
     <description>New versions of MangoStats.</description>
     <language>en</language>
     <!-- releases, newest first -->
+    <item>
+      <title>MangoStats 1.0</title>
+      <pubDate>Fri, 30 Oct 2026 17:17:25 GMT</pubDate>
+      <sparkle:version>202610301416</sparkle:version>
+      <sparkle:shortVersionString>1.0</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
+      <sparkle:fullReleaseNotesLink>https://github.com/Mangocorporation/MangoStats/releases/tag/v1.0</sparkle:fullReleaseNotesLink>
+      <description sparkle:format="markdown"><![CDATA[
+The first release of MangoStats: live Mac stats in the menu bar.
+
+## What's in it
+
+- **Menu bar:** pick which stats show (CPU, GPU, Memory, Disk, Network, Temperature, Fan, Battery), reorder them, icon and value or value only.
+- **Popover:** a health score with its reasons, a card per stat with its history, the top processes, and whether the camera or microphone is in use and what keeps the Mac awake.
+- **Status window:** eight live cards and every process, sortable and searchable, with Quit and Force Quit.
+- **History:** a minute-by-minute record for up to 90 days, charted by hour, day, week, or month.
+- **Alerts:** a notification when memory pressure turns critical, the CPU runs hot or busy, disk space or the battery runs low, or one app hogs the CPU. Off until you turn them on.
+- **Fan control:** Auto, Cool, and Max, through a helper you approve once. It returns to Auto whenever MangoStats isn't running.
+- **Check for Updates…** in Settings › General.
+
+## Privacy
+
+Everything stays on this Mac. MangoStats connects to the internet only to measure network latency (a connection to 1.1.1.1 every 30 seconds) and, once a day, to download the list of releases from mangocorporation.github.io. You can turn the update check off in Settings › General.
+]]></description>
+      <enclosure url="https://github.com/Mangocorporation/MangoStats/releases/download/v1.0/MangoStats-1.0.zip" type="application/octet-stream" sparkle:edSignature="wQR5bWjRmQMyqTesGPfVu3CHwSI/+qgSZiLAWC7XeEeiEJ/tULQlH+k4x+2eYOtrjpbmgnhzGpF+1pwhujVDBQ==" length="4170552"/>
+    </item>
   </channel>
 </rss>
