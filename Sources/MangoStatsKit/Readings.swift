@@ -75,12 +75,14 @@ public struct Reading: Sendable {
     /// nil when nobody looks at processes (popover and window closed).
     public var processes: [ProcessSample]?
     public var sensors: SensorReading
+    public var privacy: PrivacyReading
     public var time: Date
 
     public init(ticks: [CPUTicks], memory: MemoryReading, disk: DiskReading?, network: NetworkCounters,
                 battery: BatteryReading?, processes: [ProcessSample]?, sensors: SensorReading = SensorReading(),
-                time: Date) {
+                privacy: PrivacyReading = PrivacyReading(), time: Date) {
         self.sensors = sensors
+        self.privacy = privacy
         self.ticks = ticks
         self.memory = memory
         self.disk = disk
@@ -136,4 +138,32 @@ public struct FanReading: Sendable, Equatable {
 
     /// Share of the top speed, 0…1.
     public var speed: Double { max > 0 ? Swift.min(rpm / max, 1) : 0 }
+}
+
+/// Camera, microphone, and sleep state (S-019).
+public struct PrivacyReading: Sendable, Equatable {
+    public var cameraInUse: Bool
+    public var micInUse: Bool
+    /// Names of processes keeping the Mac or its screen awake.
+    public var keepingAwake: [String]
+    public var keepingScreenOn: [String]
+
+    public init(cameraInUse: Bool = false, micInUse: Bool = false,
+                keepingAwake: [String] = [], keepingScreenOn: [String] = []) {
+        self.cameraInUse = cameraInUse
+        self.micInUse = micInUse
+        self.keepingAwake = keepingAwake
+        self.keepingScreenOn = keepingScreenOn
+    }
+}
+
+/// When to read processes: at most every 2 s, even at a 1 s refresh (S-021).
+public enum SampleSchedule {
+    public static let processInterval: TimeInterval = 2
+    public static let intervals: [Int] = [1, 2, 5]
+
+    public static func readProcesses(now: Date, last: Date?) -> Bool {
+        guard let last else { return true }
+        return now.timeIntervalSince(last) >= processInterval - 0.1
+    }
 }

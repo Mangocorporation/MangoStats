@@ -62,6 +62,14 @@ public struct StatusData: Sendable {
     public var batteryDrain: String = ""
     public var batteryLevel: Double = 0
 
+    /// Bottom row of the popover (S-019).
+    public var privacyText: String = "Not in use"
+    public var privacyActive = false
+    public var awakeText: String = "Can sleep"
+    public var awakeHelp: String = "Nothing keeps the Mac awake"
+    public var screenText: String = "Screen can sleep"
+    public var screenHelp: String = "Nothing keeps the screen on"
+
     public var processCount: Int = 0
     public var processes: [ProcessRowData] = []
 

@@ -180,6 +180,20 @@ public struct StatusBuilder: Sendable {
             status.healthReasons = health.reasons
         }
 
+        // Camera, mic, and sleep (S-019)
+        let privacy = reading.privacy
+        switch (privacy.cameraInUse, privacy.micInUse) {
+        case (true, true): status.privacyText = "Camera and mic in use"
+        case (true, false): status.privacyText = "Camera in use"
+        case (false, true): status.privacyText = "Mic in use"
+        case (false, false): status.privacyText = "Not in use"
+        }
+        status.privacyActive = privacy.cameraInUse || privacy.micInUse
+        status.awakeText = privacy.keepingAwake.isEmpty ? "Can sleep" : "Awake"
+        status.awakeHelp = Self.holders(privacy.keepingAwake, keeping: "the Mac awake")
+        status.screenText = privacy.keepingScreenOn.isEmpty ? "Screen can sleep" : "Screen on"
+        status.screenHelp = Self.holders(privacy.keepingScreenOn, keeping: "the screen on")
+
         // Only stats that can be read: the others never show in the menu bar.
         let menuValues: [MenuBarStat: String] = [
             .cpu: status.cpu == "--" ? "--" : "\(status.cpu)%",
@@ -192,6 +206,12 @@ public struct StatusBuilder: Sendable {
             .fan: status.hasFan ? "\(status.fanRPM) RPM" : "--",
         ]
         return StatusUpdate(status: status, menuValues: menuValues)
+    }
+
+    /// "Kept awake by Safari, Zoom" / "Nothing keeps the Mac awake".
+    static func holders(_ names: [String], keeping what: String) -> String {
+        let unique = Array(Set(names)).sorted()
+        return unique.isEmpty ? "Nothing keeps \(what)" : "Keeping \(what): \(unique.joined(separator: ", "))"
     }
 
     /// "idle · 0.9W", or just "idle" without a power reading.

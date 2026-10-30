@@ -37,6 +37,7 @@ struct PopoverView: View {
                     PopoverProcessRow(process: process) { AnyView(ProcessMenu(process: process)) }
                 }
             }
+            PrivacyRow(data: data)
             footer
         }
         .padding(Metric.popoverMargin)
@@ -68,6 +69,45 @@ struct PopoverView: View {
         }
         .buttonStyle(KitIconButtonStyle())
         .padding(.horizontal, Metric.iconGap)
+    }
+}
+
+/// Camera, mic, awake, and screen (S-019).
+private struct PrivacyRow: View {
+    let data: StatusData
+
+    var body: some View {
+        KitCard(style: .popover, fitsContent: true) {
+            HStack(spacing: Metric.cardPadding) {
+                HStack(spacing: Metric.iconGap) {
+                    KitIcon.camera.view(size: Metric.iconSize + 2, color: data.privacyActive ? Ink.hot : Ink.secondary)
+                    KitIcon.mic.view(size: Metric.iconSize + 2, color: data.privacyActive ? Ink.hot : Ink.secondary)
+                    Text(data.privacyText)
+                        .foregroundStyle(data.privacyActive ? Ink.hot : Ink.label)
+                        .fontWeight(data.privacyActive ? .semibold : .regular)
+                }
+                .help(data.privacyActive ? "\(data.privacyText) by an app" : "No app is using the camera or microphone")
+                Spacer(minLength: 0)
+                Label { Text(data.awakeText) } icon: { KitIcon.awake.view(size: Metric.iconSize + 2) }
+                    .help(data.awakeHelp)
+                Label { Text(data.screenText) } icon: { KitIcon.display.view(size: Metric.iconSize + 2) }
+                    .help(data.screenHelp)
+            }
+            .labelStyle(PrivacyLabelStyle())
+            .kitType(.footer)
+            .foregroundStyle(Ink.label)
+            .lineLimit(1)
+        }
+        .accessibilityElement(children: .combine)
+    }
+}
+
+private struct PrivacyLabelStyle: LabelStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        HStack(spacing: Metric.iconGap) {
+            configuration.icon
+            configuration.title
+        }
     }
 }
 

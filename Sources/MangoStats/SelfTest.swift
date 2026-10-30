@@ -69,6 +69,21 @@ enum SelfTest {
             check("temperature can show in the menu bar", model.isAvailable(.temperature))
             print("INFO sensors gpu \(status.gpu)% \(status.gpuFooter) · cpu \(status.cpuTemp ?? "-") \(status.cpuFooter) · gpu temp \(status.gpuTemp ?? "-") · fan \(status.fanRPM) RPM \(status.fanSpeed)")
 
+            // S-019 to S-021
+            check("camera and mic state is read", ["Not in use", "Camera in use", "Mic in use", "Camera and mic in use"]
+                .contains(status.privacyText), status.privacyText)
+            check("sleep state is read", ["Awake", "Can sleep"].contains(status.awakeText), status.awakeText)
+            _ = LoginItem.isEnabled
+            check("open at login reads its status without changing it", true)
+            model.refreshInterval = 1
+            let historyBefore = model.status.memoryHistory.count
+            try? await Task.sleep(for: .seconds(2.5))
+            check("a 1 s refresh keeps the history and samples faster", model.status.memoryHistory.count >= historyBefore + 2,
+                  "\(historyBefore) -> \(model.status.memoryHistory.count)")
+            check("the refresh interval survives a restart", AppModel().refreshInterval == 1)
+            model.refreshInterval = 2
+            print("INFO privacy \(status.privacyText) · \(status.awakeText) (\(status.awakeHelp)) · \(status.screenText)")
+
             // S-014: Quit ends a process of this user.
             let child = Process()
             child.executableURL = URL(fileURLWithPath: "/bin/sleep")

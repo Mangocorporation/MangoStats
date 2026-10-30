@@ -6,14 +6,13 @@ import MangoStatsKit
 /// and the menu bar values (S-001 to S-008).
 @MainActor
 final class Sampler {
-    static let interval: Duration = .seconds(2)
-
     private weak var model: AppModel?
     private var task: Task<Void, Never>?
     private let processReader = ProcessReader()
     private let sensorReader = SensorReader()
     private var builder = StatusBuilder(system: SystemInfo.read())
     private var network = NetworkContext()
+    private var lastProcessRead: Date?
 
     private let pathMonitor = NWPathMonitor()
     private var latencyTask: Task<Void, Never>?
@@ -45,7 +44,9 @@ final class Sampler {
         task = Task { [weak self] in
             while !Task.isCancelled {
                 await self?.sample()
-                try? await Task.sleep(for: Self.interval)
+                // Read each time, so a new interval applies without losing history (S-021).
+                let seconds = self?.model?.refreshInterval ?? 2
+                try? await Task.sleep(for: .seconds(seconds))
             }
         }
     }
@@ -59,13 +60,16 @@ final class Sampler {
 
     private func sample() async {
         guard let model else { return }
-        let wantProcesses = model.detailVisible
+        // Processes cost the most to read: at most every 2 s, and only while someone looks (S-021, S-023).
+        let wantProcesses = model.detailVisible && SampleSchedule.readProcesses(now: .now, last: lastProcessRead)
+        if wantProcesses { lastProcessRead = .now }
         let reader = processReader
         let sensors = sensorReader
         let reading = await Task.detached(priority: .utility) {
             Reading(ticks: CPUReader.ticks(), memory: MemoryReader.read(), disk: DiskReader.read(),
                     network: NetworkReader.counters(), battery: BatteryReader.read(),
-                    processes: wantProcesses ? reader.read() : nil, sensors: sensors.read(), time: .now)
+                    processes: wantProcesses ? reader.read() : nil, sensors: sensors.read(),
+                    privacy: PrivacyReader.read(), time: .now)
         }.value
         let update = builder.update(reading, network: network, previous: model.status)
         model.status = update.status

@@ -70,6 +70,8 @@ extension StatusData {
                 .init(id: 9993, name: "com.apple.appkit.xpc.openAndSavePanelService", memory: "132 MB", cpu: 0.0,
                       cpuText: "0.0", power: "0.0"),
         ]
+        data.awakeText = "Awake"
+        data.screenText = "Screen on"
         return data
     }()
 

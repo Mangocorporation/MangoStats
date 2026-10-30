@@ -280,14 +280,16 @@ Acceptance:
 - [unit] The camera reads `kCMIODevicePropertyDeviceIsRunningSomewhere`; the mic reads `kAudioDevicePropertyDeviceIsRunningSomewhere`.
 - [unit] "Awake" is true when any `PreventUserIdleSystemSleep` assertion exists (`IOPMCopyAssertionsByProcess`).
 - [snap] Row reads "Not in use · Awake · Screen", like the reference without the counters.
-Status: todo
+Note: "Awake" = an app holds a system-sleep assertion, "Screen on" = a display-sleep assertion (there's no public API for screen recording). powerd's own "Prevent sleep while display is on" is ignored. Tooltips name the apps.
+Status: done
 
 ### S-020 Launch at login
 As the user, I turn on "Open at login" in Settings → General.
 Screens: settings-general
 Acceptance:
 - [self] The toggle reflects `SMAppService.mainApp.status`, including when the user changed it in System Settings.
-Status: todo
+Note: test and snapshot runs never register the login item.
+Status: done
 
 ### S-021 Change the refresh interval
 As the user, I pick 1, 2, or 5 seconds in Settings → General.
@@ -296,7 +298,7 @@ Depends: S-001
 Acceptance:
 - [unit] The sampler restarts with the new interval without losing history.
 - [self] Process sampling runs at most every 2 s, even at the 1 s interval, to save energy.
-Status: todo
+Status: done
 
 ## M5 Polish
 

@@ -169,3 +169,35 @@ func hotCPU() {
                                 network: NetworkContext(), previous: .placeholder)
     #expect(update.status.healthReasons.contains("CPU hot"))
 }
+
+@Test("Camera, mic, and sleep words")
+func privacyRow() {
+    var builder = StatusBuilder(system: system)
+    func update(_ privacy: PrivacyReading) -> StatusData {
+        var r = reading(at: 0)
+        r.privacy = privacy
+        return builder.update(r, network: NetworkContext(), previous: .placeholder).status
+    }
+    let idle = update(PrivacyReading())
+    #expect(idle.privacyText == "Not in use")
+    #expect(!idle.privacyActive)
+    #expect(idle.awakeText == "Can sleep")
+    #expect(idle.screenText == "Screen can sleep")
+    #expect(update(PrivacyReading(cameraInUse: true)).privacyText == "Camera in use")
+    #expect(update(PrivacyReading(micInUse: true)).privacyText == "Mic in use")
+    let busy = update(PrivacyReading(cameraInUse: true, micInUse: true, keepingAwake: ["Zoom", "Safari", "Zoom"],
+                                     keepingScreenOn: ["Zoom"]))
+    #expect(busy.privacyText == "Camera and mic in use")
+    #expect(busy.privacyActive)
+    #expect(busy.awakeText == "Awake")
+    #expect(busy.awakeHelp == "Keeping the Mac awake: Safari, Zoom")
+    #expect(busy.screenText == "Screen on")
+}
+
+@Test("Processes are read at most every 2 seconds")
+func processSchedule() {
+    let now = Date(timeIntervalSince1970: 100)
+    #expect(SampleSchedule.readProcesses(now: now, last: nil))
+    #expect(!SampleSchedule.readProcesses(now: now, last: now.addingTimeInterval(-1)))
+    #expect(SampleSchedule.readProcesses(now: now, last: now.addingTimeInterval(-2)))
+}

@@ -37,3 +37,8 @@
 | Show in Activity Monitor | Open Activity Monitor | inspect |
 | Copy PID | Put the process ID on the clipboard | copy ID |
 | Owned by another user | Why Quit is unavailable for system processes | permission denied |
+| Not in use / Camera in use / Mic in use | Whether an app is using the camera or microphone | recording, active |
+| Awake / Can sleep | Whether an app keeps the Mac from sleeping | caffeinated, insomnia |
+| Screen on / Screen can sleep | Whether an app keeps the display on | display awake |
+| Open at login | Start MangoStats when you log in | launch at startup, auto-start |
+| Refresh every | Seconds between samples: 1, 2, or 5 | update rate, polling |

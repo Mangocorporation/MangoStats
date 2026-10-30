@@ -57,12 +57,47 @@ enum SettingsTab: String, CaseIterable, Identifiable {
     }
 }
 
-/// Launch at login (S-020) and refresh interval (S-021) arrive here.
+/// Settings > General: open at login (S-020) and refresh interval (S-021).
 struct GeneralSettings: View {
+    @Environment(AppModel.self) private var model
+    @State private var openAtLogin = LoginItem.isEnabled
+    @State private var loginError: String?
+
     var body: some View {
+        @Bindable var model = model
         Section("Startup") {
-            LabeledContent("Open at login", value: "Coming soon")
+            Toggle("Open at login", isOn: Binding(get: { openAtLogin }, set: { setOpenAtLogin($0) }))
+            if let loginError {
+                Text(loginError).foregroundStyle(.red)
+            } else if LoginItem.needsApproval {
+                Text("Allow MangoStats in System Settings > General > Login Items.")
+                    .foregroundStyle(.secondary)
+            }
         }
+        Section {
+            Picker("Refresh every", selection: $model.refreshInterval) {
+                ForEach(SampleSchedule.intervals, id: \.self) { seconds in
+                    Text(seconds == 1 ? "1 second" : "\(seconds) seconds").tag(seconds)
+                }
+            }
+        } footer: {
+            Text("The process list refreshes at most every 2 seconds, to save energy.")
+                .foregroundStyle(.secondary)
+        }
+        // The toggle follows changes made in System Settings.
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            openAtLogin = LoginItem.isEnabled
+        }
+    }
+
+    private func setOpenAtLogin(_ on: Bool) {
+        do {
+            try LoginItem.set(on)
+            loginError = nil
+        } catch {
+            loginError = "Unable to change the login item: \(error.localizedDescription)"
+        }
+        openAtLogin = LoginItem.isEnabled
     }
 }
 

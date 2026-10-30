@@ -61,6 +61,11 @@ final class AppModel {
         }
     }
 
+    /// Seconds between samples: 1, 2, or 5 (S-021).
+    var refreshInterval: Int {
+        didSet { Store.defaults.set(refreshInterval, forKey: "sampler.interval") }
+    }
+
     var menuBarStyle: MenuBarStyle {
         didSet { Store.defaults.set(menuBarStyle.rawValue, forKey: "menuBar.style") }
     }
@@ -74,6 +79,8 @@ final class AppModel {
         let defaults = Store.defaults
         menuBar = MenuBarLayout(encodedOrder: defaults.string(forKey: "menuBar.order"),
                                 encodedEnabled: defaults.string(forKey: "menuBar.enabled"))
+        let interval = defaults.integer(forKey: "sampler.interval")
+        refreshInterval = SampleSchedule.intervals.contains(interval) ? interval : 2
         menuBarStyle = MenuBarStyle(rawValue: defaults.string(forKey: "menuBar.style") ?? "") ?? .iconAndValue
     }
 
