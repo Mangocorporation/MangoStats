@@ -605,14 +605,16 @@ Acceptance:
 - [probe] `nettop` (or another source) gives per-process bytes without root.
 - [unit] Per-process byte counters become per-app rates (bytes/s) between two reads; helpers count toward their app.
 - [snap] An "Apps using the network" card: app, ↓ rate, ↑ rate, total this session, sorted by total rate.
-Status: todo
+Note: nettop works without root and sees every process; verified live (App Store, Chrome, mDNSResponder…).
+Status: done
 
 ### S-047 Name the app behind heavy traffic
 As the user, when one app uses most of the bandwidth, the Network verdict and the Overview insight say so ("Dropbox is uploading at 4 MB/s").
 Depends: S-046
 Acceptance:
 - [unit] An app above 1 MB/s and over 60 % of the traffic for 30 s becomes an insight; it clears when it drops.
-Status: todo
+Note: shown on the Network verdict and as an Overview insight once the Network tab has measured it.
+Status: done
 
 ## M14 Battery and storage details (top 3, #2)
 

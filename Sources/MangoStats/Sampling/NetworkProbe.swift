@@ -109,6 +109,18 @@ nonisolated enum NetworkProbe {
         return String(decoding: data, as: UTF8.self)
     }
 
+    /// Cumulative bytes per process from `nettop` (no root needed), with each pid's path.
+    static func traffic() -> (counters: [Int32: (received: Int64, sent: Int64)], names: [Int32: String], paths: [Int32: String]) {
+        let parsed = NetworkParse.nettop(run("/usr/bin/nettop", ["-P", "-L", "1", "-J", "bytes_in,bytes_out", "-x"], timeout: 5))
+        var paths: [Int32: String] = [:]
+        var buffer = [CChar](repeating: 0, count: Int(MAXPATHLEN))
+        for pid in parsed.counters.keys {
+            let length = proc_pidpath(pid, &buffer, UInt32(buffer.count))
+            if length > 0 { paths[pid] = String(decoding: buffer.prefix(Int(length)).map { UInt8(bitPattern: $0) }, as: UTF8.self) }
+        }
+        return (parsed.counters, parsed.names, paths)
+    }
+
     static func defaultRoute() -> (gateway: String, interface: String)? {
         NetworkParse.defaultRoute(run("/sbin/route", ["-n", "get", "default"], timeout: 3))
     }

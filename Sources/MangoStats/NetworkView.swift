@@ -16,6 +16,7 @@ struct NetworkView: View {
             VStack(alignment: .leading, spacing: Metric.sectionGap) {
                 header
                 VerdictCard(monitor: monitor)
+                AppTrafficCard(monitor: monitor)
                 LazyVGrid(columns: row, spacing: Metric.cardGap) {
                     RouterCard(monitor: monitor)
                     WiFiCard(monitor: monitor)
@@ -86,6 +87,12 @@ private struct VerdictCard: View {
                 .kitType(.body)
                 .foregroundStyle(Ink.body)
                 .padding(.top, Metric.iconGap)
+            if let heavy = monitor.heavyApp {
+                Text(HeavyTraffic.sentence(heavy) + ", using most of your bandwidth.")
+                    .kitType(.body)
+                    .foregroundStyle(Ink.accent)
+                    .padding(.top, Metric.iconGap)
+            }
             PathDiagram(monitor: monitor, health: verdict.health)
                 .padding(.top, Metric.sectionGap - 8)
         }
@@ -345,6 +352,62 @@ private struct OutagesCard: View {
             }
         }
         .frame(maxWidth: 420)
+    }
+}
+
+/// Apps using the network right now, busiest first (S-046).
+private struct AppTrafficCard: View {
+    let monitor: NetworkMonitor
+
+    var body: some View {
+        KitCard(height: nil, fitsContent: true) {
+            CardHeader(title: "Apps using the network", detail: total)
+            if monitor.appTraffic.isEmpty {
+                Text(monitor.running ? "Nothing is using the network right now." : "Measuring…")
+                    .kitType(.body).foregroundStyle(Ink.body)
+                    .padding(.top, Metric.heroTop)
+            } else {
+                HStack {
+                    Text("App").frame(maxWidth: .infinity, alignment: .leading)
+                    Text("Down").frame(width: Metric.colMemory, alignment: .trailing)
+                    Text("Up").frame(width: Metric.colMemory, alignment: .trailing)
+                    Text("This session").frame(width: Metric.colMemory + 20, alignment: .trailing)
+                }
+                .kitType(.columnHeader).foregroundStyle(Ink.secondary)
+                .padding(.top, Metric.heroTop)
+                VStack(spacing: 0) {
+                    ForEach(monitor.appTraffic.prefix(8)) { app in
+                        HStack {
+                            Text(app.name).kitType(.rowName).foregroundStyle(Ink.text).lineLimit(1)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                            Text(speed(app.download)).frame(width: Metric.colMemory, alignment: .trailing)
+                                .foregroundStyle(app.id == monitor.heavyApp?.id && app.download >= app.upload ? Ink.accent : Ink.body)
+                            Text(speed(app.upload)).frame(width: Metric.colMemory, alignment: .trailing)
+                                .foregroundStyle(app.id == monitor.heavyApp?.id && app.upload > app.download ? Ink.accent : Ink.body)
+                            Text(Format.bytes(app.sessionBytes, binary: false, digits: 1))
+                                .frame(width: Metric.colMemory + 20, alignment: .trailing)
+                                .foregroundStyle(Ink.secondary)
+                        }
+                        .kitType(.rowNumber)
+                        .frame(height: Metric.popRowHeight + 6)
+                        .overlay(alignment: .bottom) { Rectangle().fill(Ink.divider).frame(height: Metric.cardStroke) }
+                        .accessibilityElement(children: .combine)
+                    }
+                }
+            }
+        }
+    }
+
+    private var total: String? {
+        guard !monitor.appTraffic.isEmpty else { return nil }
+        let down = monitor.appTraffic.reduce(0) { $0 + $1.download }
+        let up = monitor.appTraffic.reduce(0) { $0 + $1.upload }
+        return "↓ \(speed(down)) · ↑ \(speed(up))"
+    }
+
+    private func speed(_ bytesPerSecond: Double) -> String {
+        let s = Format.speed(bytesPerSecond)
+        return "\(s.value) \(s.unit)"
     }
 }
 

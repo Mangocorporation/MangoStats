@@ -113,15 +113,27 @@ final class AppModel {
         menuBarStyle = MenuBarStyle(rawValue: defaults.string(forKey: "menuBar.style") ?? "") ?? .iconAndValue
     }
 
+    /// Every insight, including heavy network traffic the Network tab found (S-047).
+    var insights: [Insight] {
+        var all = status.insights
+        if let heavy = NetworkMonitor.shared.heavyApp {
+            let words = HeavyTraffic.sentence(heavy)
+            all.append(Insight(kind: .network, eyebrow: "Network is busy", title: words,
+                               body: "It's using most of your bandwidth, so everything else on the network may feel slow.",
+                               app: heavy.name))
+        }
+        return all
+    }
+
     /// The insight card's content: the first issue not dismissed, or calm.
     var currentInsight: Insight {
-        status.insights.first { !dismissedInsights.contains(Self.key($0)) } ?? .calm
+        insights.first { !dismissedInsights.contains(Self.key($0)) } ?? .calm
     }
 
     /// "Health 84 · Good — 2 things worth a look".
     var healthLine: String {
         guard status.health != "--" else { return "Measuring…" }
-        let open = status.insights.filter { !dismissedInsights.contains(Self.key($0)) }.count
+        let open = insights.filter { !dismissedInsights.contains(Self.key($0)) }.count
         let worth = open == 0 ? "nothing needs a look" : open == 1 ? "1 thing worth a look" : "\(open) things worth a look"
         return "Health \(status.health) · \(status.healthWord) — \(worth)"
     }

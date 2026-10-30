@@ -50,6 +50,10 @@ final class NetworkMonitor {
     private(set) var speedResults: [NetworkParse.SpeedResult] = []
     private(set) var speedTestRunning = false
     private(set) var locationAllowed = false
+    /// Apps using the network right now, busiest first (S-046).
+    private(set) var appTraffic: [AppTraffic] = []
+    /// The app that has led heavy traffic for 30 s, if any (S-047).
+    private(set) var heavyApp: AppTraffic?
 
     struct Outage: Identifiable, Hashable {
         var start: Date
@@ -78,6 +82,8 @@ final class NetworkMonitor {
     @ObservationIgnored private var bonjourNames: [String: String] = [:]
     @ObservationIgnored private var speedProcess: Process?
     @ObservationIgnored private var misses = 0
+    @ObservationIgnored private var trafficMeter = TrafficMeter()
+    @ObservationIgnored private var heavySince: (key: String, start: Date)?
     @ObservationIgnored private let location = LocationPermission()
     @ObservationIgnored private lazy var vendors: VendorDirectory = {
         let url = Bundle.main.url(forResource: "oui", withExtension: "txt")
@@ -147,9 +153,23 @@ final class NetworkMonitor {
             return (await routerPing, pings, NetworkProbe.wifi())
         }.value
         if gatewayAddress != nil { router.add(result.0) }
+        await measureTraffic()
         for index in sites.indices { sites[index].stats.add(result.1[index]) }
         wifi = result.2
         trackOutage(routerUp: result.0 != nil, internetUp: result.1.contains { $0 != nil })
+    }
+
+    /// Per-app traffic from nettop, and the app behind heavy traffic (S-046, S-047).
+    private func measureTraffic() async {
+        let reading = await Task.detached(priority: .utility) { NetworkProbe.traffic() }.value
+        appTraffic = trafficMeter.update(counters: reading.counters, paths: reading.paths, names: reading.names, time: .now)
+        if let leader = HeavyTraffic.leader(appTraffic) {
+            if heavySince?.key != leader.id { heavySince = (leader.id, .now) }
+            heavyApp = Date.now.timeIntervalSince(heavySince?.start ?? .now) >= 30 ? leader : nil
+        } else {
+            heavySince = nil
+            heavyApp = nil
+        }
     }
 
     /// Every minute: the path, DNS, devices, the lease, and UPnP.
@@ -290,6 +310,13 @@ final class NetworkMonitor {
             NetworkDevice(ip: "192.168.1.31", mac: "00:1b:a9:44:55:66", vendor: "Brother Industries, Ltd.", name: "Office Printer"),
             NetworkDevice(ip: "192.168.1.42", mac: "ba:11:22:33:44:55", vendor: "Private address"),
         ]
+        appTraffic = [
+            AppTraffic(name: "Dropbox", bundlePath: "/Applications/Dropbox.app", download: 12_000, upload: 4_200_000, sessionBytes: 1_900_000_000),
+            AppTraffic(name: "Safari", bundlePath: "/Applications/Safari.app", download: 640_000, upload: 22_000, sessionBytes: 310_000_000),
+            AppTraffic(name: "Music", bundlePath: "/System/Applications/Music.app", download: 320_000, upload: 4_000, sessionBytes: 96_000_000),
+            AppTraffic(name: "mDNSResponder", bundlePath: nil, download: 2_100, upload: 1_400, sessionBytes: 3_100_000),
+        ]
+        heavyApp = appTraffic[0]
         speedResults = [NetworkParse.SpeedResult(date: .now.addingTimeInterval(-3_600), download: 412, upload: 38.5,
                                                  responsiveness: 1_450, idleLatency: 18)]
     }

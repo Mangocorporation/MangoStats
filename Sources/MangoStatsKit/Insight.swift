@@ -4,7 +4,7 @@ import Foundation
 /// popover's header (design/KIT.md, Insight card). Calm when nothing is.
 public struct Insight: Equatable, Sendable {
     public enum Kind: String, Sendable {
-        case calm, memory, disk, hot, busyApp, battery
+        case calm, memory, disk, hot, busyApp, battery, network
     }
 
     public var kind: Kind
