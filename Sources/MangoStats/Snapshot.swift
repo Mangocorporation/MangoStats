@@ -4,10 +4,11 @@ import SwiftUI
 
 /// Screenshot mode for agents.
 ///   APP_STORE=/tmp/test.store APP_SNAPSHOT=/tmp/shots ~/Applications/MangoStats.app/Contents/MacOS/MangoStats
-/// writes <page>-light.png and <page>-dark.png for every sidebar page, and
+/// writes popover-light.png and popover-dark.png (the menu bar popover in a
+/// stand-in window), <page>-light.png and <page>-dark.png for every Status page, and
 /// settings-<tab>-light.png and settings-<tab>-dark.png for every Settings tab, then quits.
 /// Each PNG gets a <page>-<mode>-layout.json with the grid probes (tools/check-layout.swift).
-/// APP_SNAPSHOT_PAGES=all,starred limits the pages. Add "settings" to include Settings.
+/// APP_SNAPSHOT_PAGES=popover,status limits the pages. Add "settings" to include Settings.
 /// Add APP_ACCENT=<id> to see the pages in another accent.
 enum Snapshot {
     static func runIfRequested(model: AppModel, openSettings: OpenSettingsAction) {
@@ -15,7 +16,7 @@ enum Snapshot {
         guard let dir = env["APP_SNAPSHOT"], !dir.isEmpty else { return }
         // Snapshots never run against the real database.
         guard Store.isOverridden else {
-            print("SNAPSHOT refused: set APP_STORE to a file in /tmp")
+            print("SNAPSHOT refused: set APP_STORE to a path in /tmp")
             NSApp.terminate(nil)
             return
         }
@@ -30,24 +31,39 @@ enum Snapshot {
                                         IOPMAssertionLevel(kIOPMAssertionLevelOn), "Snapshots" as CFString, &awake)
             try? FileManager.default.createDirectory(atPath: dir, withIntermediateDirectories: true)
             try? await Task.sleep(for: .seconds(1.5))
+            let main = NSApp.windows.first { $0.canBecomeMain && !$0.isSheet }
+            if only == nil || only?.contains("popover") == true {
+                // MenuBarExtra windows open only on a click, so draw the same view in a stand-in panel.
+                let panel = NSPanel(contentRect: .zero, styleMask: [.borderless], backing: .buffered, defer: false)
+                panel.contentView = NSHostingView(rootView: PopoverView().environment(model).themed())
+                panel.backgroundColor = .windowBackgroundColor
+                panel.setContentSize(panel.contentView?.fittingSize ?? .zero)
+                panel.center()
+                for mode in ["light", "dark"] {
+                    NSApp.appearance = NSAppearance(named: mode == "light" ? .aqua : .darkAqua)
+                    panel.orderFrontRegardless()
+                    try? await Task.sleep(for: .seconds(0.8))
+                    capture(to: "\(dir)/popover-\(mode).png", window: panel)
+                }
+                panel.close()
+            }
             for mode in ["light", "dark"] {
                 NSApp.appearance = NSAppearance(named: mode == "light" ? .aqua : .darkAqua)
-                for page in SidebarItem.allCases where only?.contains(page.rawValue) ?? true {
-                    model.sidebar = page
+                for page in Page.allCases where only?.contains(page.rawValue) ?? true {
+                    model.page = page
                     try? await Task.sleep(for: .seconds(0.8))
-                    capture(to: "\(dir)/\(page.rawValue)-\(mode).png")
+                    capture(to: "\(dir)/\(page.rawValue)-\(mode).png", window: main)
                 }
             }
             if only == nil || only?.contains("settings") == true {
-                let main = NSApp.windows.first { $0.canBecomeMain && !$0.isSheet }
-                openSettings()
+                NSApp.activate(); openSettings()
                 try? await Task.sleep(for: .seconds(1))
                 for mode in ["light", "dark"] {
                     NSApp.appearance = NSAppearance(named: mode == "light" ? .aqua : .darkAqua)
                     for tab in SettingsTab.allCases {
                         model.settingsTab = tab
                         try? await Task.sleep(for: .seconds(0.8))
-                        let settings = NSApp.windows.first { $0.isVisible && $0 !== main && !$0.isSheet }
+                        let settings = NSApp.windows.first { $0.isVisible && ($0.identifier?.rawValue ?? "").localizedCaseInsensitiveContains("settings") } ?? NSApp.windows.first { $0.isVisible && $0 !== main && $0.canBecomeMain }
                         capture(to: "\(dir)/settings-\(tab.rawValue)-\(mode).png", window: settings)
                     }
                 }
@@ -74,7 +90,7 @@ enum Snapshot {
         }
         // Active, like a window someone is using: real accent colors and focus rings.
         NSApp.activate()
-        window.makeKeyAndOrderFront(nil)
+        if window.canBecomeKey { window.makeKeyAndOrderFront(nil) } else { window.orderFrontRegardless() }
         let size = window.contentView?.bounds.size ?? .zero
         GridProbes.shared.write(to: path.replacingOccurrences(of: ".png", with: "-layout.json"), window: size)
         try? FileManager.default.removeItem(atPath: path)

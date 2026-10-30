@@ -1,91 +1,80 @@
-import SwiftData
 import SwiftUI
+import MangoStatsKit
 
-struct ContentView: View {
+/// The menu bar item: the stats people chose in Settings > Menu Bar.
+/// Values arrive with the sampler (S-001); until then each shows "--".
+struct MenuBarLabel: View {
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        let stats = model.menuBar.visible
+        if stats.isEmpty {
+            // Never invisible: with every stat off, show the app's symbol.
+            Image(systemName: "chart.bar.xaxis")
+        } else {
+            HStack(spacing: Space.xs) {
+                ForEach(stats) { stat in
+                    if model.menuBarStyle == .iconAndValue {
+                        Image(systemName: stat.symbol)
+                    }
+                    Text("--").monospacedDigit()
+                }
+            }
+        }
+    }
+}
+
+/// The popover that opens from the menu bar item. Cards arrive with S-002 to S-008.
+struct PopoverView: View {
+    @Environment(\.openWindow) private var openWindow
+    @Environment(\.openSettings) private var openSettings
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Space.lg) {
+            Text("MangoStats").font(.title2.bold())
+            Text("Stats arrive in the next stories.")
+                .foregroundStyle(.secondary)
+            Divider()
+            HStack(spacing: Space.sm) {
+                Button("Open MangoStats", systemImage: "macwindow") {
+                    NSApp.activate()
+                    openWindow(id: "status")
+                }
+                .keyboardShortcut("1")
+                .help("Open the Status window (⌘1)")
+                Spacer()
+                Button("Settings…", systemImage: "gearshape") {
+                    NSApp.activate()
+                    openSettings()
+                }
+                .keyboardShortcut(",")
+                .help("Change which stats show in the menu bar (⌘,)")
+                Button("Quit MangoStats", systemImage: "power") { NSApp.terminate(nil) }
+                    .keyboardShortcut("q")
+                    .help("Quit MangoStats (⌘Q)")
+            }
+            .labelStyle(.iconOnly)
+            .buttonStyle(.borderless)
+        }
+        .padding(Space.lg)
+        .frame(width: 360)
+    }
+}
+
+/// The Status window. Cards and the process table arrive with S-010 to S-014.
+struct StatusView: View {
     @Environment(AppModel.self) private var model
     @Environment(\.openSettings) private var openSettings
 
     var body: some View {
-        NavigationSplitView {
-            sidebar
-        } content: {
-            ItemList(page: model.sidebar ?? .all)
-                .navigationSplitViewColumnWidth(min: 260, ideal: 320)
-        } detail: {
-            ItemDetail()
-        }
-        .task {
-            SeedData.insertIfRequested(into: model)
-            SelfTest.runIfRequested(model: model)
-            Snapshot.runIfRequested(model: model, openSettings: openSettings)
-        }
-    }
-
-    private var sidebar: some View {
-        @Bindable var model = model
-        return List(SidebarItem.allCases, selection: $model.sidebar) { page in
-            Label(page.title, systemImage: page.symbol)
-                .tag(page)
-        }
-        .navigationSplitViewColumnWidth(min: 180, ideal: 212)
-    }
-}
-
-struct ItemList: View {
-    @Environment(AppModel.self) private var model
-    @Environment(\.modelContext) private var context
-    @Query(sort: \Item.createdAt, order: .reverse) private var items: [Item]
-    let page: SidebarItem
-
-    private var visible: [Item] {
-        page == .starred ? items.filter(\.isStarred) : items
-    }
-
-    var body: some View {
-        @Bindable var model = model
-        List(visible, selection: $model.selection) { item in
-            Label(item.title, systemImage: item.isStarred ? "star.fill" : "circle")
-                .tag(item.id)
-                .contextMenu {
-                    Button("Delete", role: .destructive) { context.delete(item) }
-                }
-        }
-        .overlay {
-            if visible.isEmpty {
-                ContentUnavailableView(
-                    "No Items",
-                    systemImage: page.symbol,
-                    description: Text("Press Command-N to add one.")
-                )
+        ContentUnavailableView("Status", systemImage: "chart.bar.xaxis",
+                               description: Text("Cards and the process table arrive in the next stories."))
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .navigationTitle("MangoStats")
+            .noInitialFocus()
+            .task {
+                SelfTest.runIfRequested(model: model)
+                Snapshot.runIfRequested(model: model, openSettings: openSettings)
             }
-        }
-        .navigationTitle(page.title)
-        .toolbar {
-            ToolbarItem {
-                Button("New Item", systemImage: "plus") { model.addItem() }
-                    .help("Add an item (Command-N)")
-            }
-        }
-    }
-}
-
-struct ItemDetail: View {
-    @Environment(AppModel.self) private var model
-    @Query private var items: [Item]
-
-    var body: some View {
-        if let item = items.first(where: { $0.id == model.selection }) {
-            @Bindable var item = item
-            Form {
-                TextField("Title", text: $item.title)
-                Toggle("Starred", isOn: $item.isStarred)
-                TextField("Notes", text: $item.notes, axis: .vertical)
-                    .lineLimit(4...)
-            }
-            .formStyle(.grouped)
-            } else {
-            ContentUnavailableView("No Selection", systemImage: "sidebar.right")
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                }
     }
 }

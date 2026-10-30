@@ -1,4 +1,5 @@
 import SwiftUI
+import MangoStatsKit
 
 /// The Settings window (Command-Comma). One tab per topic, at most about
 /// six. Each tab is a grouped Form that sizes to its content, so the
@@ -23,6 +24,7 @@ struct SettingsView: View {
         Form {
             switch tab {
             case .general: GeneralSettings()
+            case .menuBar: MenuBarSettings()
             case .appearance: AppearanceSettings()
             }
         }
@@ -34,13 +36,14 @@ struct SettingsView: View {
 
 /// The Settings tabs. Snapshot mode walks through every case.
 enum SettingsTab: String, CaseIterable, Identifiable {
-    case general, appearance
+    case general, menuBar, appearance
 
     var id: String { rawValue }
 
     var title: String {
         switch self {
         case .general: "General"
+        case .menuBar: "Menu Bar"
         case .appearance: "Appearance"
         }
     }
@@ -48,17 +51,41 @@ enum SettingsTab: String, CaseIterable, Identifiable {
     var symbol: String {
         switch self {
         case .general: "gearshape"
+        case .menuBar: "menubar.rectangle"
         case .appearance: "paintpalette"
         }
     }
 }
 
+/// Launch at login (S-020) and refresh interval (S-021) arrive here.
 struct GeneralSettings: View {
-    @AppStorage("confirmDelete") private var confirmDelete = true
+    var body: some View {
+        Section("Startup") {
+            LabeledContent("Open at login", value: "Coming soon")
+        }
+    }
+}
+
+/// Settings > Menu Bar: which stats show, in what order (S-009, finished in its story).
+struct MenuBarSettings: View {
+    @Environment(AppModel.self) private var model
 
     var body: some View {
-        Section("Items") {
-            Toggle("Ask before deleting items", isOn: $confirmDelete)
+        @Bindable var model = model
+        Section("Show in Menu Bar") {
+            ForEach(model.menuBar.order) { stat in
+                Toggle(isOn: Binding(get: { model.menuBar.enabled.contains(stat) },
+                                     set: { model.setShown(stat, $0) })) {
+                    Label(stat.title, systemImage: stat.symbol)
+                }
+                .accessibilityLabel("Show \(stat.title) in menu bar")
+            }
+            .onMove { model.menuBar.move(fromOffsets: $0, toOffset: $1) }
+        }
+        Section {
+            Picker("Menu bar style", selection: $model.menuBarStyle) {
+                ForEach(MenuBarStyle.allCases) { Text($0.title).tag($0) }
+            }
         }
     }
 }
