@@ -10,6 +10,8 @@ struct StatusView: View {
         Group {
             if KitGallery.enabled {
                 KitGallery()
+            } else if model.page == .about {
+                AboutView()
             } else if model.page == .network {
                 NetworkView()
             } else if model.page == .history {

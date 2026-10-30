@@ -57,6 +57,8 @@ if [[ -d "$here/Icon/AppIcon.icon" ]]; then
 fi
 # Device makers for the Network tab (IEEE OUI list, tools/update-oui.sh).
 cp "$here/Resources/oui.txt" "$app/Contents/Resources/"
+# Icons of our other apps, for About › More from MangoCorp when they aren't installed.
+cp "$here/Resources/"*-icon.png "$app/Contents/Resources/"
 # -s also clears the framework symlinks: an attribute left on one becomes a ._ file in the
 # release zip, and Gatekeeper rejects ._ files in a framework's root after some unzips.
 xattr -crs "$app"

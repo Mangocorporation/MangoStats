@@ -21,7 +21,7 @@ enum Store {
 
 /// The Status window's pages. Snapshot mode walks through every case.
 enum Page: String, CaseIterable, Identifiable {
-    case status, network, history
+    case status, network, history, about
 
     var id: String { rawValue }
     var title: String {
@@ -29,6 +29,7 @@ enum Page: String, CaseIterable, Identifiable {
         case .status: "Overview"
         case .network: "Network"
         case .history: "History"
+        case .about: "About"
         }
     }
 }

@@ -584,6 +584,18 @@ Acceptance:
 Note: live: 8 devices, names from Bonjour (a MacBook Pro, a PlayStation, a Samsung TV), private addresses marked.
 Status: done
 
+## M12 About
+
+### S-045 About MangoStats and other MangoCorp apps
+As the user, I open the About tab (⌘4) to see the version, check for updates, open the website, GitHub, and release notes, read what MangoStats is and its credits, and find other MangoCorp apps.
+Screens: about
+Acceptance:
+- [snap] Icon, name, version (short and build), tagline, Check for Updates…, Website, GitHub, What's New; About and Credits cards.
+- [manual] More from MangoCorp lists MangoMemory with its icon; "Open MangoMemory" when it's installed (with an "installed" pill), "Get MangoMemory" (its website) when not.
+- New apps: one row in `MangoApp.others` and an icon `<Name>-icon.png` in Resources/.
+Note: verified with MangoMemory installed in /Applications.
+Status: done
+
 ## Dropped
 - Clean, Apps, Optimize, Analyze tabs: another app's job (MangoCleaner).
 - "Cleaned / Uninstalled / Optimized" counters: belong to cleaning, not stats.

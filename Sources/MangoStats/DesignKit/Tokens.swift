@@ -219,6 +219,10 @@ nonisolated enum Metric {
     static let infoRowPadding: CGFloat = 3
     static let pathStroke: CGFloat = 2
     static let headerIcon: CGFloat = 18
+    static let aboutIcon: CGFloat = 112
+    static let aboutWidth: CGFloat = 1040
+    static let creditsWidth: CGFloat = 360
+    static let otherAppIcon: CGFloat = 64
 }
 
 enum Motion {
