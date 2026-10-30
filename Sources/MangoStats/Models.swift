@@ -80,17 +80,21 @@ final class AppModel {
     /// The stats the menu bar draws: on, and readable on this Mac.
     var shownStats: [MenuBarStat] { menuBar.visible.filter(isAvailable) }
 
-    /// GPU, temperature, and fan readings arrive with M3 (S-015 to S-018).
+    /// Whether this Mac can show a stat. Before the first reading, assume yes,
+    /// so the menu bar doesn't flicker on launch.
     func isAvailable(_ stat: MenuBarStat) -> Bool {
+        guard !menuValues.isEmpty else { return true }
         switch stat {
-        case .gpu, .temperature, .fan: false
-        case .battery: status.hasBattery
-        default: true
+        case .gpu: return status.hasGPU
+        case .temperature: return status.hasTemperature
+        case .fan: return status.hasFan
+        case .battery: return status.hasBattery
+        default: return true
         }
     }
 
     func unavailableReason(_ stat: MenuBarStat) -> String {
-        stat == .battery ? "Not available on this Mac" : "Coming in a later version"
+        "Not available on this Mac"
     }
 
     func setShown(_ stat: MenuBarStat, _ shown: Bool) {

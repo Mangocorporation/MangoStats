@@ -41,9 +41,15 @@ public struct StatusData: Sendable {
     public var networkUnit: String = "KB/s"
     public var networkInterface: String = "Network"
     public var networkUpload: String = "Upload --"
+    /// Popover footer, where "Upload" doesn't fit next to the latency: "↑ 31 KB/s".
+    public var networkUploadShort: String = "↑ --"
     public var networkLatency: String = ""
     public var networkHistory: [Double] = []
 
+    /// Which sensor stats this Mac provides (Settings > Menu Bar lists the others as off).
+    public var hasGPU = false
+    public var hasTemperature = false
+    public var hasFan = false
     public var fanRPM: String = "--"
     public var fanSpeed: String = "Speed --"
     public var fanNote: String = "Managed by macOS"

@@ -74,10 +74,13 @@ public struct Reading: Sendable {
     public var battery: BatteryReading?
     /// nil when nobody looks at processes (popover and window closed).
     public var processes: [ProcessSample]?
+    public var sensors: SensorReading
     public var time: Date
 
     public init(ticks: [CPUTicks], memory: MemoryReading, disk: DiskReading?, network: NetworkCounters,
-                battery: BatteryReading?, processes: [ProcessSample]?, time: Date) {
+                battery: BatteryReading?, processes: [ProcessSample]?, sensors: SensorReading = SensorReading(),
+                time: Date) {
+        self.sensors = sensors
         self.ticks = ticks
         self.memory = memory
         self.disk = disk
@@ -96,4 +99,41 @@ public struct NetworkCounters: Sendable, Equatable {
         self.received = received
         self.sent = sent
     }
+}
+
+/// Sensor values from the GPU, the SMC, and IOReport (S-015 to S-018).
+/// Each is nil when this Mac can't provide it.
+public struct SensorReading: Sendable, Equatable {
+    /// GPU load, 0…1.
+    public var gpu: Double?
+    /// °C, averaged over the CPU (Tp*, Te*) or GPU (Tg*) sensors.
+    public var cpuTemperature: Double?
+    public var gpuTemperature: Double?
+    /// Watts since the previous reading.
+    public var cpuWatts: Double?
+    public var gpuWatts: Double?
+    public var fans: [FanReading]
+
+    public init(gpu: Double? = nil, cpuTemperature: Double? = nil, gpuTemperature: Double? = nil,
+                cpuWatts: Double? = nil, gpuWatts: Double? = nil, fans: [FanReading] = []) {
+        self.gpu = gpu
+        self.cpuTemperature = cpuTemperature
+        self.gpuTemperature = gpuTemperature
+        self.cpuWatts = cpuWatts
+        self.gpuWatts = gpuWatts
+        self.fans = fans
+    }
+}
+
+public struct FanReading: Sendable, Equatable {
+    public var rpm: Double
+    public var max: Double
+
+    public init(rpm: Double, max: Double) {
+        self.rpm = rpm
+        self.max = max
+    }
+
+    /// Share of the top speed, 0…1.
+    public var speed: Double { max > 0 ? Swift.min(rpm / max, 1) : 0 }
 }

@@ -32,6 +32,7 @@ public struct StatusBuilder: Sendable {
     private var cpuHistory = History()
     private var memoryHistory = History()
     private var networkHistory = History()
+    private var gpuHistory = History()
     private var cpuMinute = History(capacity: 30)
 
     public init(system: SystemInfo) {
@@ -73,7 +74,33 @@ public struct StatusBuilder: Sendable {
         status.uptime = Format.uptime(reading.time.timeIntervalSince(system.boot))
 
         status.cpu = first ? "--" : percent(cpu)
-        status.cpuFooter = first ? "--" : CPUUsage.label(cpu)
+        let sensors = reading.sensors
+        status.cpuFooter = first ? "--" : Self.footer(CPUUsage.label(cpu), watts: sensors.cpuWatts)
+        status.cpuTemp = sensors.cpuTemperature.map(Format.celsius)
+        status.hasTemperature = sensors.cpuTemperature != nil
+
+        // GPU (S-015)
+        if let gpu = sensors.gpu {
+            gpuHistory.append(gpu)
+            status.hasGPU = true
+            status.gpu = percent(gpu)
+            status.gpuFooter = Self.footer(CPUUsage.label(gpu), watts: sensors.gpuWatts)
+            status.gpuHistory = gpuHistory.values
+        }
+        status.gpuTemp = sensors.gpuTemperature.map(Format.celsius)
+
+        // Fan (S-018): the first fan; Macs without one say so.
+        if let fan = sensors.fans.first {
+            status.hasFan = true
+            status.fanRPM = Format.number(fan.rpm, digits: 0)
+            status.fanSpeed = "Speed \(percent(fan.speed))%"
+            status.fanNote = "Managed by macOS"
+        } else {
+            status.hasFan = false
+            status.fanRPM = "--"
+            status.fanSpeed = "No fan"
+            status.fanNote = "This Mac has no fan"
+        }
         status.cpuHistory = cpuHistory.values.suffix(Self.cpuBars)
 
         status.memory = percent(memoryFraction)
@@ -98,6 +125,7 @@ public struct StatusBuilder: Sendable {
             status.networkUnit = speed.unit
             let up = Format.speed(upload)
             status.networkUpload = network.online ? "Upload \(up.value) \(up.unit)" : "Upload --"
+            status.networkUploadShort = network.online ? "↑ \(up.value) \(up.unit)" : "↑ --"
         }
         status.networkInterface = network.online ? network.interface : "Offline"
         status.networkLatency = network.online ? (network.latency == nil ? "" : Latency.label(milliseconds: network.latency)) : "Offline"
@@ -144,7 +172,7 @@ public struct StatusBuilder: Sendable {
             let health = Health(Health.Input(pressure: memory.pressure,
                                              diskFreeFraction: disk.total > 0 ? Double(disk.free) / Double(disk.total) : 1,
                                              diskFreeBytes: disk.free, swapBytes: memory.swap,
-                                             cpuTemperature: nil,
+                                             cpuTemperature: reading.sensors.cpuTemperature,
                                              sustainedCPU: cpuMinute.values.reduce(0, +) / Double(max(cpuMinute.values.count, 1))))
             status.health = "\(health.score)"
             status.healthWord = health.word
@@ -159,7 +187,15 @@ public struct StatusBuilder: Sendable {
             .disk: "\(status.diskFree) \(status.diskFreeUnit)",
             .network: status.network == "--" ? "--" : "\(status.network) \(status.networkUnit)",
             .battery: status.hasBattery ? "\(status.battery)%" : "--",
+            .gpu: status.hasGPU ? "\(status.gpu)%" : "--",
+            .temperature: status.cpuTemp ?? "--",
+            .fan: status.hasFan ? "\(status.fanRPM) RPM" : "--",
         ]
         return StatusUpdate(status: status, menuValues: menuValues)
+    }
+
+    /// "idle · 0.9W", or just "idle" without a power reading.
+    static func footer(_ label: String, watts: Double?) -> String {
+        watts.map { "\(label) · \(Format.watts($0))" } ?? label
     }
 }

@@ -240,7 +240,7 @@ Depends: S-010
 Acceptance:
 - [unit] GPU % reads `Device Utilization %` from the IOAccelerator `PerformanceStatistics`.
 - [snap] Orange line chart, temperature pill.
-Status: todo
+Status: done
 
 ### S-016 See CPU and GPU temperatures
 As the user, I see CPU and GPU temperatures in the card pills and can show temperature in the menu bar.
@@ -248,7 +248,8 @@ Depends: S-003, S-015
 Acceptance:
 - [unit] On Apple silicon, temperatures come from the IOHID temperature sensors, averaged per group (CPU dies, GPU).
 - [self] When no sensor is readable, the pill shows "--" and nothing crashes.
-Status: todo
+Note: temperatures come from SMC keys (CPU Tp*/Te*, GPU Tg*, averaged), not IOHID: the IOHID sensor names don't say which die is CPU or GPU.
+Status: done
 
 ### S-017 Read power draw
 As the user, I see CPU and GPU watts under each card ("idle · 0.9W").
@@ -256,7 +257,8 @@ Depends: S-003, S-015
 Acceptance:
 - [unit] Watts come from IOReport "Energy Model" deltas divided by the elapsed time.
 - [self] Without IOReport access, the power part is hidden instead of showing 0.
-Status: todo
+Note: IOReport channels use different units (CPU Energy in mJ, GPU Energy in nJ); the reader converts by the unit label.
+Status: done
 
 ### S-018 Read the fan card
 As the user, I see fan RPM, speed % and "Managed by macOS", with Auto/Cool/Max shown and Auto selected.
@@ -266,7 +268,7 @@ Acceptance:
 - [unit] RPM is read from SMC keys `F0Ac`/`F0Mx`; speed % = actual / max.
 - [snap] Cool and Max are disabled with the tooltip "Fan control is coming in a later version".
 - [self] Fanless Macs show "No fan".
-Status: todo
+Status: done
 
 ## M4 System
 

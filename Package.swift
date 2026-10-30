@@ -11,7 +11,9 @@ let package = Package(
             name: "MangoStats",
             dependencies: ["MangoStatsKit"],
             // App code runs on the main thread unless you say otherwise.
-            swiftSettings: [.defaultIsolation(MainActor.self)]
+            swiftSettings: [.defaultIsolation(MainActor.self)],
+            // IOReport: CPU and GPU energy (Sampling/SensorReader.swift).
+            linkerSettings: [.linkedLibrary("IOReport")]
         ),
         .testTarget(name: "MangoStatsKitTests", dependencies: ["MangoStatsKit"]),
     ]

@@ -16,7 +16,8 @@ Dependencies point one way: the app imports the Kit, never the other way.
 Readers (app, nonisolated)  ->  Reading (Kit)  ->  StatusBuilder (Kit)  ->  StatusUpdate
   CPUReader, MemoryReader,                         keeps histories and       status: StatusData
   DiskReader, NetworkReader,                       previous counters         menuValues: [MenuBarStat: String]
-  BatteryReader, ProcessReader                                                     |
+  BatteryReader, ProcessReader,
+  SensorReader (GPU, SMC, IOReport)                                                    |
                                                                                    v
 Sampler (app, @MainActor): every 2 s, reads off the main thread,     AppModel.status / .menuValues
   runs the builder, writes the model. Owns NWPathMonitor and the      -> MenuBarLabel, PopoverView,
@@ -30,7 +31,8 @@ Sampler (app, @MainActor): every 2 s, reads off the main thread,     AppModel.st
 
 ## App folders
 
-- `Sampling/` system readers, process reader (ps + proc_pid_rusage), sampler.
+- `Sampling/` system readers, process reader (ps + proc_pid_rusage), sensor reader (IOAccelerator GPU load,
+  SMC temperatures and fans, IOReport energy; links libIOReport), sampler.
 - `DesignKit/` tokens, icons, parts, gallery (design/KIT.md).
 - `PopoverView.swift`, `StatusView.swift`, `SettingsView.swift` the three surfaces.
 - `Models.swift` `AppModel` (menu bar layout, status, open surfaces) and `Store` (settings domain).

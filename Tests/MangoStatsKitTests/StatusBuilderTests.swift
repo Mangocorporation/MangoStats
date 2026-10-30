@@ -10,12 +10,13 @@ private let system = SystemInfo(chip: "M5", memory: 24 * gib, macOS: "macOS 26.6
 /// A reading `seconds` after start, with CPU ticks that make `busy` percent load since the last one.
 private func reading(at seconds: Double, busyTicks: UInt64 = 0, idleTicks: UInt64 = 0,
                      received: UInt64 = 0, sent: UInt64 = 0,
-                     battery: BatteryReading? = nil, processes: [ProcessSample]? = nil) -> Reading {
+                     battery: BatteryReading? = nil, processes: [ProcessSample]? = nil,
+                     sensors: SensorReading = SensorReading()) -> Reading {
     Reading(ticks: [CPUTicks(user: busyTicks, system: 0, idle: idleTicks, nice: 0)],
             memory: MemoryReading(total: 24 * gib, used: 18 * gib, swap: 0, pressure: .normal),
             disk: DiskReading(total: 500_000_000_000, free: 100_000_000_000),
             network: NetworkCounters(received: received, sent: sent),
-            battery: battery, processes: processes, time: start.addingTimeInterval(seconds))
+            battery: battery, processes: processes, sensors: sensors, time: start.addingTimeInterval(seconds))
 }
 
 @Test("First reading shows -- for CPU, then a value")
@@ -58,6 +59,7 @@ func networkSpeed() {
     #expect(status.network == "4")
     #expect(status.networkUnit == "KB/s")
     #expect(status.networkUpload == "Upload <1 KB/s")
+    #expect(status.networkUploadShort == "↑ <1 KB/s")
     #expect(status.networkInterface == "Wi-Fi")
     #expect(status.networkLatency == "Low Lag")
     status = builder.update(reading(at: 4, received: 100), network: wifi, previous: status).status
@@ -123,4 +125,47 @@ func processRows() {
 
     let closed = builder.update(reading(at: 2), network: NetworkContext(), previous: update.status)
     #expect(closed.status.processes.count == 2)
+}
+
+@Test("Sensors fill GPU, temperatures, watts, and fan")
+func sensors() {
+    var builder = StatusBuilder(system: system)
+    let sensors = SensorReading(gpu: 0.53, cpuTemperature: 45.4, gpuTemperature: 41.6, cpuWatts: 0.92,
+                                gpuWatts: 12.3, fans: [FanReading(rpm: 1_310, max: 6_550)])
+    var update = builder.update(reading(at: 0, sensors: sensors), network: NetworkContext(), previous: .placeholder)
+    update = builder.update(reading(at: 2, busyTicks: 5, idleTicks: 95, sensors: sensors), network: NetworkContext(),
+                            previous: update.status)
+    let status = update.status
+    #expect(status.gpu == "53")
+    #expect(status.gpuHistory == [0.53, 0.53])
+    #expect(status.cpuTemp == "45°C")
+    #expect(status.gpuTemp == "42°C")
+    #expect(status.cpuFooter == "idle · \(Format.watts(0.92))")
+    #expect(status.gpuFooter == "normal · 12W")
+    #expect(status.fanRPM == "1310")
+    #expect(status.fanSpeed == "Speed 20%")
+    #expect(update.menuValues[.gpu] == "53%")
+    #expect(update.menuValues[.temperature] == "45°C")
+    #expect(update.menuValues[.fan] == "1310 RPM")
+    #expect(status.hasGPU && status.hasTemperature && status.hasFan)
+}
+
+@Test("Without sensors: pills hidden, no fan, menu shows --")
+func noSensors() {
+    var builder = StatusBuilder(system: system)
+    let update = builder.update(reading(at: 0), network: NetworkContext(), previous: .placeholder)
+    #expect(update.status.cpuTemp == nil)
+    #expect(update.status.gpu == "--")
+    #expect(update.status.fanSpeed == "No fan")
+    #expect(update.status.fanNote == "This Mac has no fan")
+    #expect(!update.status.hasGPU && !update.status.hasTemperature && !update.status.hasFan)
+    #expect(update.menuValues[.fan] == "--")
+}
+
+@Test("A hot CPU lowers health")
+func hotCPU() {
+    var builder = StatusBuilder(system: system)
+    let update = builder.update(reading(at: 0, sensors: SensorReading(cpuTemperature: 96)),
+                                network: NetworkContext(), previous: .placeholder)
+    #expect(update.status.healthReasons.contains("CPU hot"))
 }

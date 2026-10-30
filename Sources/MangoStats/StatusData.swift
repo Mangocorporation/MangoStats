@@ -34,6 +34,7 @@ extension StatusData {
         data.networkUnit = "KB/s"
         data.networkInterface = "Wi-Fi"
         data.networkUpload = "Upload <1 KB/s"
+        data.networkUploadShort = "↑ <1 KB/s"
         data.networkLatency = "Low Lag"
         data.networkHistory = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 9, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
         data.fanRPM = "0"

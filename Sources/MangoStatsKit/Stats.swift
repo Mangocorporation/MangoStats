@@ -198,6 +198,16 @@ public enum Format {
         return "up \(plural(minutes, "min"))"
     }
 
+    /// "0.9W", "12W": one decimal under 10 W.
+    public static func watts(_ value: Double, locale: Locale = .current) -> String {
+        "\(number(value, digits: value < 10 ? 1 : 0, locale: locale))W"
+    }
+
+    /// "48°C".
+    public static func celsius(_ value: Double) -> String {
+        "\(Int(value.rounded()))°C"
+    }
+
     /// "1 h 20 min", "45 min".
     public static func duration(minutes: Int) -> String {
         minutes >= 60 ? "\(minutes / 60) h \(minutes % 60) min" : "\(minutes) min"

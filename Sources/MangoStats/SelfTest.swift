@@ -29,7 +29,12 @@ enum SelfTest {
             model.setShown(.cpu, false)
             check("turning stats on and off changes the menu bar", model.menuBar.visible == [.memory, .network])
             model.setShown(.gpu, true)
-            check("stats this Mac can't read yet stay out of the menu bar", !model.shownStats.contains(.gpu))
+            model.menuValues = [.cpu: "1%"]
+            model.status.hasGPU = false
+            check("stats this Mac can't read stay out of the menu bar", !model.shownStats.contains(.gpu))
+            model.status.hasGPU = true
+            check("stats this Mac can read show in the menu bar", model.shownStats.contains(.gpu))
+            model.menuValues = [:]
             model.setShown(.gpu, false)
             let reloaded = AppModel()
             check("menu bar choices survive a restart", reloaded.menuBar == model.menuBar)
@@ -55,6 +60,15 @@ enum SelfTest {
             check("other users' processes are listed", status.processes.contains { $0.name == "WindowServer" })
             let memories = status.processes.prefix(5).map(\.name)
             check("top processes are sorted by memory", !memories.isEmpty, memories.joined(separator: ", "))
+            // S-015 to S-018: sensors (this Mac has a GPU, SMC sensors, and a fan).
+            check("GPU load is read", status.hasGPU && Int(status.gpu) != nil, status.gpu)
+            check("CPU temperature is read", status.cpuTemp?.hasSuffix("°C") == true, status.cpuTemp ?? "nil")
+            check("GPU temperature is read", status.gpuTemp != nil)
+            check("CPU power shows in the footer", status.cpuFooter.hasSuffix("W"), status.cpuFooter)
+            check("the fan is read", status.hasFan && status.fanSpeed.hasPrefix("Speed"), status.fanSpeed)
+            check("temperature can show in the menu bar", model.isAvailable(.temperature))
+            print("INFO sensors gpu \(status.gpu)% \(status.gpuFooter) · cpu \(status.cpuTemp ?? "-") \(status.cpuFooter) · gpu temp \(status.gpuTemp ?? "-") · fan \(status.fanRPM) RPM \(status.fanSpeed)")
+
             // S-014: Quit ends a process of this user.
             let child = Process()
             child.executableURL = URL(fileURLWithPath: "/bin/sleep")

@@ -11,6 +11,7 @@ final class Sampler {
     private weak var model: AppModel?
     private var task: Task<Void, Never>?
     private let processReader = ProcessReader()
+    private let sensorReader = SensorReader()
     private var builder = StatusBuilder(system: SystemInfo.read())
     private var network = NetworkContext()
 
@@ -60,10 +61,11 @@ final class Sampler {
         guard let model else { return }
         let wantProcesses = model.detailVisible
         let reader = processReader
+        let sensors = sensorReader
         let reading = await Task.detached(priority: .utility) {
             Reading(ticks: CPUReader.ticks(), memory: MemoryReader.read(), disk: DiskReader.read(),
                     network: NetworkReader.counters(), battery: BatteryReader.read(),
-                    processes: wantProcesses ? reader.read() : nil, time: .now)
+                    processes: wantProcesses ? reader.read() : nil, sensors: sensors.read(), time: .now)
         }.value
         let update = builder.update(reading, network: network, previous: model.status)
         model.status = update.status

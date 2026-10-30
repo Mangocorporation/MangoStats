@@ -188,7 +188,8 @@ private struct PopNetworkCard: View {
             Spacer(minLength: 0)
             LineChart(values: data.networkHistory, tint: Ink.network, ceiling: nil).frame(height: Metric.popChartHeight)
             Spacer(minLength: 0)
-            CardFooter(leading: data.networkUpload, trailing: data.networkLatency)
+            CardFooter(leading: data.networkUploadShort, trailing: data.networkLatency)
+                .accessibilityLabel("\(data.networkUpload), \(data.networkLatency)")
         }
         .accessibilityElement(children: .combine)
     }
