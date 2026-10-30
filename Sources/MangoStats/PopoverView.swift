@@ -1,29 +1,37 @@
 import SwiftUI
 import MangoStatsKit
 
-/// The popover that opens from the menu bar item, laid out like
-/// local/reference/menubar-popover.png (S-002 to S-008).
+/// The popover that opens from the menu bar item: the Overview in small
+/// (design/KIT.md, Popover).
 struct PopoverView: View {
     @Environment(AppModel.self) private var model
     @Environment(\.openWindow) private var openWindow
     @Environment(\.openSettings) private var openSettings
 
-    private let columns = [GridItem(.flexible(), spacing: Metric.cardGap * 0.7),
-                           GridItem(.flexible(), spacing: Metric.cardGap * 0.7)]
+    private let columns = [GridItem(.flexible(), spacing: Metric.popoverMargin - 2),
+                           GridItem(.flexible(), spacing: Metric.popoverMargin - 2)]
 
     var body: some View {
         let data = model.status
-        VStack(alignment: .leading, spacing: Metric.popoverMargin) {
-            HealthHeader(data: data)
-            LazyVGrid(columns: columns, spacing: Metric.cardGap * 0.7) {
-                PopCPUCard(data: data)
-                PopGPUCard(data: data)
-                PopMemoryCard(data: data)
-                PopDiskCard(data: data)
-                PopNetworkCard(data: data)
-                PopFanCard(data: data)
+        VStack(alignment: .leading, spacing: Metric.popoverMargin - 2) {
+            header(data)
+            let insight = model.currentInsight
+            if !insight.isCalm { PopInsight(insight: insight) }
+            LazyVGrid(columns: columns, spacing: Metric.popoverMargin - 2) {
+                PopStat(title: "CPU", detail: data.cpuTemp, value: data.cpu, unit: "%",
+                        chart: data.cpuHistory, tint: Ink.cpu, footer: data.cpuFooter.capitalizedFirst)
+                PopStat(title: "GPU", detail: data.gpuTemp, value: data.gpu, unit: "%",
+                        chart: data.gpuHistory, tint: Ink.gpu, footer: data.gpuFooter.capitalizedFirst)
+                PopStat(title: "Memory", detail: data.memoryPressure == "--" ? nil : data.memoryPressure.lowercased(),
+                        value: data.memory, unit: "%", chart: data.memoryHistory, tint: Ink.memory,
+                        footer: data.memoryUsedOfTotal, hot: data.memoryPressureLevel != .normal)
+                PopStorage(data: data)
+                PopStat(title: "Network", detail: data.networkInterface, value: data.network, unit: data.networkUnit,
+                        chart: data.networkHistory, tint: Ink.network, ceiling: nil, footer: data.networkUploadShort,
+                        accessibility: data.networkUpload)
+                PopFan(data: data)
             }
-            PopBatteryCard(data: data)
+            if data.hasBattery { PopBattery(data: data) }
             KitCard(style: .popover, fitsContent: true) {
                 PopoverProcessHeader()
                     .padding(.bottom, Metric.iconGap)
@@ -48,6 +56,28 @@ struct PopoverView: View {
         .onDisappear { model.popoverOpen = false }
     }
 
+    private func header(_ data: StatusData) -> some View {
+        HStack(alignment: .center) {
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(alignment: .firstTextBaseline, spacing: Metric.iconGap) {
+                    Text(data.health).kitType(.health)
+                        .foregroundStyle(data.health == "--" ? Ink.faint : Ink.text)
+                    Text(data.healthWord).kitType(.healthWord).foregroundStyle(Ink.body)
+                }
+                Text(model.healthLine.components(separatedBy: " — ").last ?? "")
+                    .kitType(.popLabel)
+                    .foregroundStyle(Ink.secondary)
+            }
+            .help(data.healthReasons.isEmpty ? "Nothing needs attention" : data.healthReasons.joined(separator: "\n"))
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel(model.healthLine)
+            Spacer()
+            LivePill(text: "Live")
+        }
+        .padding(.horizontal, 2)
+        .padding(.top, 2)
+    }
+
     private var footer: some View {
         HStack(spacing: Metric.iconGap) {
             Button("Open MangoStats", systemImage: KitIcon.window.symbol) {
@@ -55,7 +85,7 @@ struct PopoverView: View {
                 openWindow(id: "status")
             }
             .keyboardShortcut("1")
-            .help("Open the Status window (⌘1)")
+            .help("Open the Overview window (⌘1)")
             Spacer()
             if let version = model.updater.available {
                 // A background check found an update: offer it here too (S-035).
@@ -74,7 +104,138 @@ struct PopoverView: View {
                 .help("Quit MangoStats (⌘Q)")
         }
         .buttonStyle(KitIconButtonStyle())
-        .padding(.horizontal, Metric.iconGap)
+    }
+}
+
+// MARK: - Cards
+
+/// The insight in small: eyebrow and title, tinted like the Overview's card.
+private struct PopInsight: View {
+    @Environment(AppModel.self) private var model
+    @Environment(\.openWindow) private var openWindow
+    let insight: Insight
+
+    var body: some View {
+        KitCard(style: .popover, fitsContent: true, tinted: true) {
+            Eyebrow(text: insight.eyebrow, icon: .warning, color: Ink.accent)
+            Text(insight.title)
+                .kitType(.rowName)
+                .foregroundStyle(Ink.text)
+                .lineLimit(1)
+                .padding(.top, Metric.iconGap)
+            if let app = insight.app {
+                Button("Review \(app.split(separator: " ").last.map(String.init) ?? app)…") {
+                    model.review(app)
+                    NSApp.activate()
+                    openWindow(id: "status")
+                }
+                .buttonStyle(LinkButtonStyle())
+                .padding(.top, Metric.iconGap)
+                .help("Open \(app) in the Overview's process list")
+            }
+        }
+        .accessibilityElement(children: .combine)
+    }
+}
+
+private struct PopStat: View {
+    let title: String
+    let detail: String?
+    let value: String
+    let unit: String?
+    let chart: [Double]
+    let tint: Color
+    var ceiling: Double? = 1
+    let footer: String
+    var hot = false
+    var accessibility: String?
+
+    var body: some View {
+        KitCard(style: .popover) {
+            CardHeader(title: title, detail: detail, hot: hot, style: .popover)
+            HeroValue(value: value, unit: unit, role: .popValue).padding(.top, Metric.iconGap)
+            Spacer(minLength: 0)
+            LineChart(values: chart, tint: tint, ceiling: ceiling, height: Metric.popChartHeight)
+            Spacer(minLength: 0)
+            CardFooter(leading: footer)
+                .accessibilityLabel(accessibility ?? footer)
+        }
+        .accessibilityElement(children: .combine)
+    }
+}
+
+private struct PopStorage: View {
+    let data: StatusData
+
+    var body: some View {
+        Button {
+            NSWorkspace.shared.open(URL(fileURLWithPath: "/"))
+        } label: {
+            KitCard(style: .popover) {
+                CardHeader(title: "Storage", detail: data.diskTotal, style: .popover)
+                HeroValue(value: data.diskFree, unit: "\(data.diskFreeUnit) free", role: .popValue)
+                    .padding(.top, Metric.iconGap)
+                Spacer(minLength: 0)
+                KitProgressBar(value: data.diskUsed, fill: data.diskUsed > 0.9 ? Ink.accent : Ink.disk,
+                               height: Metric.cpuBar.height)
+                Spacer(minLength: 0)
+                CardFooter(leading: data.diskFooter)
+            }
+        }
+        .buttonStyle(.plain)
+        .help("Open the startup disk in Finder")
+        .accessibilityLabel("Storage, \(data.storageTitle), \(data.diskFooter)")
+    }
+}
+
+private struct PopFan: View {
+    let data: StatusData
+
+    var body: some View {
+        KitCard(style: .popover) {
+            CardHeader(title: "Fan", style: .popover) { FanModeMenu() }
+            HeroValue(value: data.fanRPM, unit: data.hasFan ? "RPM" : nil, role: .popValue)
+                .padding(.top, Metric.iconGap)
+            Spacer(minLength: 0)
+            LineChart(values: data.fanHistory, tint: Ink.secondary, height: Metric.popChartHeight)
+            Spacer(minLength: 0)
+            // The short form: "Silent · managed by macOS" doesn't fit half the popover.
+            CardFooter(leading: (data.fanNote.components(separatedBy: " · ").last ?? data.fanNote).capitalizedFirst)
+        }
+    }
+}
+
+private struct PopBattery: View {
+    let data: StatusData
+
+    var body: some View {
+        KitCard(style: .popover, fitsContent: true) {
+            HStack(alignment: .firstTextBaseline) {
+                Text("Battery").kitType(.popLabel).foregroundStyle(Ink.secondary)
+                HeroValue(value: data.battery, unit: "%", role: .popValue)
+                Spacer()
+                VStack(alignment: .trailing, spacing: 2) {
+                    Text(data.batteryState).kitType(.footer).foregroundStyle(Ink.body)
+                    KitPill(text: data.batteryHealth.lowercased())
+                }
+            }
+        }
+        .accessibilityElement(children: .combine)
+    }
+}
+
+/// Column titles above the popover's process rows.
+struct PopoverProcessHeader: View {
+    var body: some View {
+        HStack(spacing: Metric.cardGap - 6) {
+            Text("Top processes").kitType(.popLabel).foregroundStyle(Ink.secondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            Text("Memory").frame(width: Metric.popColMemory, alignment: .trailing)
+            Text("CPU").frame(width: Metric.colCPU, alignment: .trailing)
+            Spacer().frame(width: Metric.compactSegmentHeight)
+        }
+        .kitType(.columnHeader)
+        .foregroundStyle(Ink.secondary)
     }
 }
 
@@ -83,27 +244,30 @@ private struct PrivacyRow: View {
     let data: StatusData
 
     var body: some View {
-        KitCard(style: .popover, fitsContent: true) {
-            HStack(spacing: Metric.cardPadding) {
-                HStack(spacing: Metric.iconGap) {
-                    KitIcon.camera.view(size: Metric.iconSize + 2, color: data.privacyActive ? Ink.hot : Ink.secondary)
-                    KitIcon.mic.view(size: Metric.iconSize + 2, color: data.privacyActive ? Ink.hot : Ink.secondary)
-                    Text(data.privacyText)
-                        .foregroundStyle(data.privacyActive ? Ink.hot : Ink.label)
-                        .fontWeight(data.privacyActive ? .semibold : .regular)
-                }
-                .help(data.privacyActive ? "\(data.privacyText) by an app" : "No app is using the camera or microphone")
-                Spacer(minLength: 0)
-                Label { Text(data.awakeText) } icon: { KitIcon.awake.view(size: Metric.iconSize + 2) }
-                    .help(data.awakeHelp)
-                Label { Text(data.screenText) } icon: { KitIcon.display.view(size: Metric.iconSize + 2) }
-                    .help(data.screenHelp)
+        HStack(spacing: Metric.cardGap) {
+            HStack(spacing: Metric.iconGap) {
+                KitIcon.camera.view(color: data.privacyActive ? Ink.hot : Ink.secondary)
+                KitIcon.mic.view(color: data.privacyActive ? Ink.hot : Ink.secondary)
+                Text(data.privacyText)
+                    .foregroundStyle(data.privacyActive ? Ink.hot : Ink.body)
+                    .fontWeight(data.privacyActive ? .semibold : .regular)
             }
-            .labelStyle(PrivacyLabelStyle())
-            .kitType(.footer)
-            .foregroundStyle(Ink.label)
-            .lineLimit(1)
+            .help(data.privacyActive ? "\(data.privacyText) by an app" : "No app is using the camera or microphone")
+            Spacer(minLength: 0)
+            Label { Text(data.awakeText) } icon: { KitIcon.awake.view() }
+                .help(data.awakeHelp)
+            Label { Text(data.screenText) } icon: { KitIcon.display.view() }
+                .help(data.screenHelp)
         }
+        .labelStyle(PrivacyLabelStyle())
+        .kitType(.footer)
+        .foregroundStyle(Ink.body)
+        .lineLimit(1)
+        .padding(.horizontal, Metric.popCardPadding)
+        .padding(.vertical, Metric.popCardPaddingBottom - 2)
+        .background(Ink.cardFill, in: RoundedRectangle(cornerRadius: Metric.cardRadius, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: Metric.cardRadius, style: .continuous)
+            .strokeBorder(Ink.cardStroke, lineWidth: Metric.cardStroke))
         .accessibilityElement(children: .combine)
     }
 }
@@ -114,182 +278,5 @@ private struct PrivacyLabelStyle: LabelStyle {
             configuration.icon
             configuration.title
         }
-    }
-}
-
-// MARK: - Header
-
-private struct HealthHeader: View {
-    let data: StatusData
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: Metric.popoverMargin) {
-            HStack(alignment: .firstTextBaseline, spacing: Metric.iconGap * 2) {
-                KitIcon.health.view(size: Metric.headerIcon, color: Ink.health)
-                HStack(alignment: .firstTextBaseline, spacing: Metric.iconGap) {
-                    Text(data.health)
-                        .kitType(.health)
-                        .foregroundStyle(data.health == "--" ? Ink.secondary : Ink.text)
-                    Text(data.healthWord).kitType(.healthWord).foregroundStyle(Ink.label)
-                }
-            }
-            .help(data.healthReasons.isEmpty ? "Nothing needs attention" : data.healthReasons.joined(separator: "\n"))
-            .accessibilityElement(children: .combine)
-            .accessibilityLabel("Health \(data.health), \(data.healthWord)")
-            HStack(spacing: Metric.iconGap) {
-                KitChip(text: data.chip)
-                KitChip(text: data.ram)
-                KitChip(text: data.macOS)
-                KitChip(text: data.uptime)
-            }
-        }
-        .padding(.horizontal, Metric.iconGap)
-        .padding(.top, Metric.iconGap)
-    }
-}
-
-// MARK: - Cards
-
-private struct PopCPUCard: View {
-    let data: StatusData
-
-    var body: some View {
-        KitCard(style: .popover) {
-            CardHeader(icon: .cpu, title: "CPU", tint: Ink.cpu, pill: data.cpuTemp, style: .popover)
-            HeroValue(value: data.cpu, unit: "%", role: .popHero).padding(.top, Metric.iconGap)
-            Spacer(minLength: 0)
-            BarHistory(values: data.cpuHistory)
-            Spacer(minLength: 0)
-            CardFooter(leading: data.cpuFooter)
-        }
-        .accessibilityElement(children: .combine)
-    }
-}
-
-private struct PopGPUCard: View {
-    let data: StatusData
-
-    var body: some View {
-        KitCard(style: .popover) {
-            CardHeader(icon: .gpu, title: "GPU", tint: Ink.gpu, pill: data.gpuTemp, style: .popover)
-            HeroValue(value: data.gpu, unit: "%", role: .popHero).padding(.top, Metric.iconGap)
-            Spacer(minLength: 0)
-            LineChart(values: data.gpuHistory, tint: Ink.gpu).frame(height: Metric.popChartHeight)
-            Spacer(minLength: 0)
-            CardFooter(leading: data.gpuFooter)
-        }
-        .accessibilityElement(children: .combine)
-    }
-}
-
-private struct PopMemoryCard: View {
-    let data: StatusData
-
-    var body: some View {
-        KitCard(style: .popover) {
-            CardHeader(icon: .memory, title: "MEM", tint: Ink.memory,
-                       pill: data.memoryPressure == "--" ? nil : data.memoryPressure,
-                       pillHot: data.memoryPressureLevel != .normal, style: .popover)
-            HeroValue(value: data.memory, unit: "%", role: .popHero).padding(.top, Metric.iconGap)
-            Spacer(minLength: 0)
-            AreaChart(values: data.memoryHistory, height: Metric.popChartHeight)
-            Spacer(minLength: 0)
-            CardFooter(leading: data.memoryUsedOfTotal)
-        }
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("Memory, \(data.memory) percent, pressure \(data.memoryPressure), \(data.memoryUsedOfTotal)")
-    }
-}
-
-private struct PopDiskCard: View {
-    let data: StatusData
-
-    var body: some View {
-        Button {
-            NSWorkspace.shared.open(URL(fileURLWithPath: "/"))
-        } label: {
-            KitCard(style: .popover) {
-                CardHeader(icon: .disk, title: "Free space", tint: Ink.network, pill: data.diskTotal, style: .popover)
-                HeroValue(value: data.diskFree, unit: data.diskFreeUnit, role: .popHero).padding(.top, Metric.iconGap)
-                Spacer(minLength: 0)
-                KitProgressBar(value: data.diskUsed, fill: AnyShapeStyle(Ink.diskPopover))
-                Spacer(minLength: 0)
-                CardFooter(leading: data.diskFooter)
-            }
-        }
-        .buttonStyle(.plain)
-        .help("Open the startup disk in Finder")
-        .accessibilityLabel("Free space, \(data.diskFree) \(data.diskFreeUnit) of \(data.diskTotal), \(data.diskFooter)")
-    }
-}
-
-private struct PopNetworkCard: View {
-    let data: StatusData
-
-    var body: some View {
-        KitCard(style: .popover) {
-            CardHeader(icon: .network, title: "Network", tint: Ink.network, pill: data.networkInterface, style: .popover)
-            HeroValue(value: data.network, unit: data.networkUnit, role: .popHero).padding(.top, Metric.iconGap)
-            Spacer(minLength: 0)
-            LineChart(values: data.networkHistory, tint: Ink.network, ceiling: nil).frame(height: Metric.popChartHeight)
-            Spacer(minLength: 0)
-            CardFooter(leading: data.networkUploadShort, trailing: data.networkLatency)
-                .accessibilityLabel("\(data.networkUpload), \(data.networkLatency)")
-        }
-        .accessibilityElement(children: .combine)
-    }
-}
-
-private struct PopFanCard: View {
-    let data: StatusData
-
-    var body: some View {
-        KitCard(style: .popover) {
-            CardHeader(icon: .fan, title: "Fan", tint: Ink.gpu, pill: data.fanSpeed, style: .popover)
-            HeroValue(value: data.fanRPM, unit: "RPM", role: .popHero).padding(.top, Metric.iconGap)
-            Text(data.fanNote).kitType(.footer).foregroundStyle(Ink.secondary)
-            Spacer(minLength: 0)
-            FanModePicker(compact: true)
-        }
-    }
-}
-
-private struct PopBatteryCard: View {
-    let data: StatusData
-
-    var body: some View {
-        KitCard(style: .popover, fitsContent: true) {
-            CardHeader(icon: nil, title: "Battery", pill: data.hasBattery ? data.batteryHealth : nil, style: .popover)
-            HStack(alignment: .center) {
-                VStack(alignment: .leading, spacing: Metric.iconGap) {
-                    HStack(alignment: .firstTextBaseline, spacing: Metric.iconGap) {
-                        Text(data.hasBattery ? "\(data.battery)%" : "--")
-                            .kitType(.health)
-                            .foregroundStyle(data.hasBattery ? Ink.text : Ink.secondary)
-                        if let watts = data.batteryWatts {
-                            HStack(spacing: 2) {
-                                KitIcon.bolt.view(size: Metric.headerIcon * 0.7, color: Ink.label)
-                                Text(watts).kitType(.healthWord).foregroundStyle(Ink.label)
-                            }
-                        }
-                    }
-                    Text(data.batteryState).kitType(.footer).foregroundStyle(Ink.secondary)
-                }
-                Spacer()
-                Button("Open Battery Settings", systemImage: KitIcon.laptop.symbol) {
-                    SystemSettings.open("com.apple.Battery-Settings.extension")
-                }
-                .buttonStyle(RingButtonStyle(progress: data.batteryLevel))
-                .help("Open Battery settings")
-                Button("Open Energy Settings", systemImage: KitIcon.waves.symbol) {
-                    SystemSettings.open("com.apple.Lock-Screen-Settings.extension")
-                }
-                .buttonStyle(RingButtonStyle(progress: 0.8))
-                .help("Open Energy settings")
-            }
-            .padding(.top, Metric.iconGap)
-        }
-        .accessibilityElement(children: .contain)
-        .accessibilityLabel("Battery, \(data.battery) percent, \(data.batteryState), \(data.batteryHealth)")
     }
 }

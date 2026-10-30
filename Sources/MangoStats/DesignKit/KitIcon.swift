@@ -6,6 +6,7 @@ import MangoStatsKit
 enum KitIcon: String, CaseIterable {
     case cpu, gpu, memory, disk, network, fan, battery, health, bolt, laptop, waves
     case camera, mic, awake, display, search, more, window, gear, power, chart, thermometer, sortUp, sortDown, clear
+    case warning, settings, storage
 
     var symbol: String {
         switch self {
@@ -34,6 +35,9 @@ enum KitIcon: String, CaseIterable {
         case .sortUp: "chevron.up"
         case .sortDown: "chevron.down"
         case .clear: "xmark.circle.fill"
+        case .warning: "exclamationmark.triangle"
+        case .settings: "slider.horizontal.3"
+        case .storage: "externaldrive"
         }
     }
 

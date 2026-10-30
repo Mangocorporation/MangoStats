@@ -35,6 +35,8 @@ public struct StatusBuilder: Sendable {
     private var memoryHistory = History()
     private var networkHistory = History()
     private var gpuHistory = History()
+    private var batteryHistory = History()
+    private var fanHistory = History()
     private var cpuMinute = History(capacity: 30)
 
     public init(system: SystemInfo) {
@@ -93,6 +95,8 @@ public struct StatusBuilder: Sendable {
 
         // Fan (S-018): the first fan; Macs without one say so.
         if let fan = sensors.fans.first {
+            fanHistory.append(fan.speed)
+            status.fanHistory = fanHistory.values
             status.hasFan = true
             status.fanRPM = Format.number(fan.rpm, digits: 0)
             status.fanSpeed = "Speed \(percent(fan.speed))%"
@@ -134,6 +138,8 @@ public struct StatusBuilder: Sendable {
         status.networkHistory = networkHistory.values
 
         if let battery = reading.battery {
+            batteryHistory.append(Double(battery.percent) / 100)
+            status.batteryHistory = batteryHistory.values
             status.hasBattery = true
             status.battery = "\(battery.percent)"
             status.batteryLevel = Double(battery.percent) / 100
@@ -181,6 +187,38 @@ public struct StatusBuilder: Sendable {
             status.healthReason = health.reasons.first ?? "All good"
             status.healthReasons = health.reasons
         }
+
+        // Overview lines and the insight card (S-037)
+        status.memoryFraction = memoryFraction
+        status.memoryUsedLine = "\(Format.bytes(memory.used, digits: 2)) used of \(Format.bytes(memory.total, digits: 0))"
+        status.memoryDetailLine = "\(Format.bytes(memory.swap, digits: 2)) swap · pressure \(memory.pressure.title.lowercased())"
+        if let disk = reading.disk, disk.total > 0 {
+            status.storageTitle = "\(Format.bytes(disk.free, binary: false, digits: 0)) free"
+            let used = Format.bytes(disk.total - disk.free, binary: false, digits: 0).components(separatedBy: " ").first ?? ""
+            status.storageLine = "\(used) of \(Format.bytes(disk.total, binary: false, digits: 0)) used on \(system.volumeName)."
+        }
+        if lastNetwork != nil {
+            let down = Format.speed(download)
+            let up = Format.speed(upload)
+            let lag = network.latency.map { " · " + Latency.label(milliseconds: $0).lowercased() } ?? ""
+            status.networkLine = network.online ? "↓ \(down.value) \(down.unit) · ↑ \(up.value) \(up.unit)\(lag)" : "Offline"
+        }
+        if let battery = reading.battery {
+            let time = battery.minutesLeft.map {
+                battery.charging ? "\(Format.duration(minutes: $0)) to full" : "\(Format.duration(minutes: $0)) left"
+            } ?? (battery.charged ? "Charged" : battery.pluggedIn ? "On power" : "On battery")
+            let drain = status.processes.max { $0.cpu < $1.cpu }.map { " · \($0.name) drains most" } ?? ""
+            status.batteryLine = time + drain
+        } else {
+            status.batteryLine = "No battery"
+        }
+        let topMemory = status.processes.max { $0.memoryBytes < $1.memoryBytes }
+        let topCPU = status.processes.max { $0.cpu < $1.cpu }
+        status.insights = Insight.all(Insight.Input(
+            memoryFraction: memoryFraction, swap: memory.swap, pressure: memory.pressure,
+            diskFree: reading.disk?.free, diskTotal: reading.disk?.total, cpuTemperature: sensors.cpuTemperature,
+            topMemory: topMemory.map { ($0.name, $0.memoryBytes) }, topCPU: topCPU.map { ($0.name, $0.cpu) },
+            battery: reading.battery.map { ($0.percent, !$0.pluggedIn) }))
 
         // Camera, mic, and sleep (S-019)
         let privacy = reading.privacy

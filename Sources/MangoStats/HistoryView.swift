@@ -19,17 +19,17 @@ struct HistoryView: View {
     var body: some View {
         let points = range.downsample(minutes, now: .now)
         VStack(alignment: .leading, spacing: Metric.cardGap) {
-            HStack {
-                Text("Last \(range.title)").kitType(.cardHeader).foregroundStyle(Ink.label)
-                Spacer()
-                HStack(spacing: Metric.compactSegmentGap) {
-                    ForEach(HistoryRange.allCases) { option in
-                        Button(option.title) { range = option }
-                            .buttonStyle(SegmentButtonStyle(selected: range == option))
-                            .help("Show the last \(option.title.lowercased())")
-                    }
+            HStack(alignment: .center) {
+                VStack(alignment: .leading, spacing: Metric.iconGap) {
+                    Text("History").kitType(.pageTitle).foregroundStyle(Ink.text)
+                    Text("Last \(range.title.lowercased()) · one sample per minute")
+                        .kitType(.pageSubtitle).foregroundStyle(Ink.secondary)
                 }
+                Spacer()
+                KitSegmented(options: HistoryRange.allCases, selection: $range, title: \.title,
+                             help: { "Show the last \($0.title.lowercased())" })
             }
+            .padding(.bottom, Metric.sectionGap - Metric.cardGap)
             if loaded && points.isEmpty {
                 ContentUnavailableView("No History Yet", systemImage: KitIcon.chart.symbol,
                                        description: Text("History starts after a minute of recording."))
@@ -126,7 +126,7 @@ private struct HistoryCard: View {
 
     var body: some View {
         KitCard(height: Metric.historyCardHeight) {
-            CardHeader(icon: chart.icon, title: chart.title, tint: chart.tint, pill: summary)
+            CardHeader(title: chart.title, detail: summary)
             HistoryPlot(chart: chart, points: points, range: range, hovered: $hovered)
                 .padding(.top, Metric.cardPadding / 2)
             if chart.series.count > 1 {

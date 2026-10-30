@@ -494,6 +494,24 @@ Acceptance:
 Note: 1.0 released 2026-10-30: notarized (Accepted), GitHub release v1.0, feed live; the downloaded zip's EdDSA signature verifies.
 Status: done
 
+## M10 Design v2
+
+### S-037 Overview with what's worth a look
+As the user, I open the window and first read the one thing worth a look ("Memory is tight · Google Chrome is holding 19,4 GB") with Review and Dismiss, then storage, five stat cards, and the processes.
+Screens: design/reference/overview.png
+Acceptance:
+- [unit] Insights come most urgent first: memory, hot CPU, busy app, storage, battery; calm when none.
+- [snap] Layout and colors match overview.png (Amber); the accent follows Settings › Appearance.
+- [manual] Review filters the process list to that app; Dismiss hides it until it changes.
+Status: done
+
+### S-038 Apps or background processes
+As the user, I switch the process list between All, Apps, and Background, sort by CPU or memory, and see the top 13 or all.
+Acceptance:
+- [unit] A process is an app when it lives in a .app bundle.
+- [snap] Segmented controls and "Show all <n>" like overview.png.
+Status: done
+
 ## Dropped
 - Clean, Apps, Optimize, Analyze tabs: another app's job (MangoCleaner).
 - "Cleaned / Uninstalled / Optimized" counters: belong to cleaning, not stats.

@@ -31,6 +31,7 @@ struct Theme: Identifiable, Hashable {
     var onAccent: Color { darkText ? Color(hex: 0x16161C) : .white }
 
     static let all: [Theme] = [
+        Theme(id: "amber", name: "Amber", shades: .init(light: 0xF7C77A, base: 0xF2A93B, deep: 0xB8761A), darkText: true),
         Theme(id: "system", name: "System", shades: nil),
         Theme(id: "blue", name: "Blue", shades: .init(light: 0x7CC0FF, base: 0x0A84FF, deep: 0x0064D2)),
         Theme(id: "indigo", name: "Indigo", shades: .init(light: 0xA5ADFF, base: 0x5E6AD2, deep: 0x4650B8)),
@@ -51,9 +52,9 @@ struct Theme: Identifiable, Hashable {
 final class ThemeStore {
     static let shared = ThemeStore()
 
-    /// The accent the app ships with. Keep "system", so the app follows the
-    /// accent people chose for their Mac.
-    static let defaultID = "system"
+    /// The accent the app ships with: Amber, the design kit's accent (design/KIT.md).
+    /// "System" follows the accent people chose for their Mac.
+    static let defaultID = "amber"
 
     /// The app's brand color, or nil. Like Apple's own apps, the brand shows
     /// only while the Mac's accent is Multicolor (System Settings >
@@ -69,7 +70,7 @@ final class ThemeStore {
     private(set) var macIsMulticolor = ThemeStore.readMulticolor()
 
     var theme: Theme {
-        let chosen = Theme.all.first { $0.id == themeID } ?? Theme.all[0]
+        let chosen = Theme.all.first { $0.id == themeID } ?? Theme.all.first { $0.id == Self.defaultID }!
         if chosen.id == "system", macIsMulticolor, let brand = Self.brand {
             return Theme(id: "system", name: "System", shades: brand.shades, darkText: brand.darkText)
         }

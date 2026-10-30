@@ -142,6 +142,8 @@ nonisolated extension SystemInfo {
         return SystemInfo(chip: chip.isEmpty ? "Mac" : chip,
                           memory: Int64(ProcessInfo.processInfo.physicalMemory),
                           macOS: "macOS \(version.majorVersion).\(version.minorVersion)\(patch)",
-                          boot: Date(timeIntervalSince1970: TimeInterval(boot.tv_sec)))
+                          boot: Date(timeIntervalSince1970: TimeInterval(boot.tv_sec)),
+                          volumeName: (try? URL(fileURLWithPath: "/").resourceValues(forKeys: [.volumeNameKey]))?
+                              .volumeName ?? "Macintosh HD")
     }
 }

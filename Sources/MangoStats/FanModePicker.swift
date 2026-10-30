@@ -1,27 +1,37 @@
 import SwiftUI
 import MangoStatsKit
 
-/// Auto, Cool, and Max on the Fan cards (S-025). Without the helper, Cool
-/// and Max are off and say where to turn fan control on.
-struct FanModePicker: View {
-    var compact = false
+/// The Fan card's mode, "Auto", as a menu: Auto, Cool, Max (S-025).
+/// Without the helper, Cool and Max are off and say where to turn fan control on.
+struct FanModeMenu: View {
     private var fan = FanControl.shared
 
-    init(compact: Bool = false) {
-        self.compact = compact
-    }
-
     var body: some View {
-        HStack(spacing: compact ? Metric.compactSegmentGap : Metric.segmentGap) {
+        Menu {
             ForEach(FanMode.allCases) { mode in
-                let available = mode == .auto || fan.state == .on
-                Button(mode.title) { fan.pick(mode) }
-                    .buttonStyle(SegmentButtonStyle(selected: fan.wanted == mode, compact: compact))
-                    .disabled(!available)
-                    .help(available ? mode.help : "Allow fan control in Settings > General")
-                    .accessibilityLabel("Fan mode \(mode.title)")
-                    .accessibilityAddTraits(fan.wanted == mode ? .isSelected : [])
+                Toggle(isOn: Binding(get: { fan.wanted == mode }, set: { if $0 { fan.pick(mode) } })) {
+                    Text(mode.title)
+                    Text(mode.help)
+                }
+                .disabled(mode != .auto && fan.state != .on)
             }
+            if fan.state != .on {
+                Divider()
+                Text("Allow fan control in Settings › General")
+            }
+        } label: {
+            HStack(spacing: 2) {
+                Text(fan.applied == fan.wanted ? fan.wanted.title : "\(fan.applied.title) (hot)")
+                KitIcon.sortDown.view(size: 7, color: Ink.secondary)
+            }
+            .kitType(.pill)
+            .foregroundStyle(fan.wanted == .auto ? Ink.secondary : Ink.accent)
         }
+        .menuStyle(.button)
+        .buttonStyle(.plain)
+        .menuIndicator(.hidden)
+        .fixedSize()
+        .help("Fan mode: Auto lets macOS decide; Cool and Max add cooling")
+        .accessibilityLabel("Fan mode \(fan.wanted.title)")
     }
 }

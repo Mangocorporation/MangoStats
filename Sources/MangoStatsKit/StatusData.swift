@@ -70,6 +70,23 @@ public struct StatusData: Sendable {
     public var screenText: String = "Screen can sleep"
     public var screenHelp: String = "Nothing keeps the screen on"
 
+    /// The Overview's insight card and header line (S-037).
+    public var insights: [Insight] = []
+    public var memoryFraction: Double = 0
+    /// "20,62 GB used of 24 GB" and "5,32 GB swap · pressure normal".
+    public var memoryUsedLine: String = "--"
+    public var memoryDetailLine: String = "--"
+    /// "98 GB free", "396 of 494 GB used on Macintosh HD."
+    public var storageTitle: String = "--"
+    public var storageLine: String = "--"
+    /// "↓ 3 KB/s · ↑ 3 KB/s · low lag"
+    public var networkLine: String = "--"
+    /// "11 h 47 min left · Chrome drains most"
+    public var batteryLine: String = "--"
+    public var batteryHistory: [Double] = []
+    /// Fan speed as a share of its top speed.
+    public var fanHistory: [Double] = []
+
     public var processCount: Int = 0
     public var processes: [ProcessRowData] = []
 
@@ -88,6 +105,8 @@ public struct ProcessRowData: Identifiable, Hashable, Sendable {
     public let cpuText: String
     public let power: String
     public var bundlePath: String?
+    /// An app (it lives in a .app bundle) or a background process.
+    public var isApp: Bool { bundlePath != nil }
     /// Raw values for sorting (S-012).
     public var memoryBytes: Int64
     public var watts: Double?

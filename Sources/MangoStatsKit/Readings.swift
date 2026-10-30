@@ -56,12 +56,15 @@ public struct SystemInfo: Sendable {
     public var memory: Int64
     public var macOS: String
     public var boot: Date
+    /// The startup disk's name: "Macintosh HD".
+    public var volumeName: String
 
-    public init(chip: String, memory: Int64, macOS: String, boot: Date) {
+    public init(chip: String, memory: Int64, macOS: String, boot: Date, volumeName: String = "Macintosh HD") {
         self.chip = chip
         self.memory = memory
         self.macOS = macOS
         self.boot = boot
+        self.volumeName = volumeName
     }
 }
 

@@ -187,3 +187,12 @@ func search() {
     #expect(ProcessTable.filter(rows, query: "  ").count == 2)
     #expect(ProcessTable.filter(rows, query: "zzz").isEmpty)
 }
+
+@Test("Apps and background processes")
+func processKinds() {
+    let app = ProcessRowData(id: 1, name: "Safari", memory: "", cpu: 0, cpuText: "", power: "", bundlePath: "/Applications/Safari.app")
+    let daemon = ProcessRowData(id: 2, name: "mds", memory: "", cpu: 0, cpuText: "", power: "")
+    #expect(ProcessKind.apps.includes(app) && !ProcessKind.apps.includes(daemon))
+    #expect(ProcessKind.background.includes(daemon) && !ProcessKind.background.includes(app))
+    #expect(ProcessKind.all.includes(app) && ProcessKind.all.includes(daemon))
+}

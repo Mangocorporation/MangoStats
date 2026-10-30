@@ -96,7 +96,8 @@ final class Sampler {
         FanControl.shared.tick()
         var status = update.status
         if let fan = reading.sensors.fans.first {
-            status.fanNote = FanPolicy.note(FanControl.shared.applied, min: fan.min, max: fan.max)
+            let note = FanPolicy.note(FanControl.shared.applied, min: fan.min, max: fan.max)
+            status.fanNote = fan.rpm < 1 && FanControl.shared.applied == .auto ? "Silent · managed by macOS" : note
         }
         model.status = status
         model.menuValues = update.menuValues

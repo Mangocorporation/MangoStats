@@ -19,6 +19,26 @@
             "target": "MangoStats",
             "configuration": "release",
             "preLaunchTask": "swift: Build Release MangoStats"
+        },
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:MangoStats}",
+            "name": "Debug MangoStatsHelper",
+            "target": "MangoStatsHelper",
+            "configuration": "debug",
+            "preLaunchTask": "swift: Build Debug MangoStatsHelper"
+        },
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:MangoStats}",
+            "name": "Release MangoStatsHelper",
+            "target": "MangoStatsHelper",
+            "configuration": "release",
+            "preLaunchTask": "swift: Build Release MangoStatsHelper"
         }
     ]
 }

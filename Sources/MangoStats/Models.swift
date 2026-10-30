@@ -24,7 +24,7 @@ enum Page: String, CaseIterable, Identifiable {
     case status, history
 
     var id: String { rawValue }
-    var title: String { self == .status ? "Status" : "History" }
+    var title: String { self == .status ? "Overview" : "History" }
 }
 
 /// App-wide state that the menu bar item, popover, and windows share.
@@ -38,9 +38,13 @@ final class AppModel {
     /// What each stat shows in the menu bar, like "15%". Missing stats show "--".
     var menuValues: [MenuBarStat: String] = [:]
     /// Processes are read only while someone looks at them (S-023).
-    /// Process table sort and search (S-012, S-013). Reset when the app starts.
-    var processSort = ProcessSort.default
+    /// Process table sort, kind, and search (S-012, S-013, S-038). Reset when the app starts.
+    var processSort = ProcessSort(column: .cpu, descending: true)
     var processQuery = ""
+    var processKind = ProcessKind.all
+    var showAllProcesses = false
+    /// Insights people dismissed, by kind and title, until they change (S-037).
+    var dismissedInsights: Set<String> = []
     var popoverOpen = false
     var windowOpen = false
     var detailVisible: Bool { popoverOpen || windowOpen }
@@ -101,6 +105,32 @@ final class AppModel {
         refreshInterval = SampleSchedule.intervals.contains(interval) ? interval : 2
         menuBarStyle = MenuBarStyle(rawValue: defaults.string(forKey: "menuBar.style") ?? "") ?? .iconAndValue
     }
+
+    /// The insight card's content: the first issue not dismissed, or calm.
+    var currentInsight: Insight {
+        status.insights.first { !dismissedInsights.contains(Self.key($0)) } ?? .calm
+    }
+
+    /// "Health 84 · Good — 2 things worth a look".
+    var healthLine: String {
+        guard status.health != "--" else { return "Measuring…" }
+        let open = status.insights.filter { !dismissedInsights.contains(Self.key($0)) }.count
+        let worth = open == 0 ? "nothing needs a look" : open == 1 ? "1 thing worth a look" : "\(open) things worth a look"
+        return "Health \(status.health) · \(status.healthWord) — \(worth)"
+    }
+
+    /// "Review Chrome": show that app at the top of the process list.
+    func review(_ app: String) {
+        page = .status
+        processKind = .all
+        processQuery = app
+    }
+
+    func dismiss(_ insight: Insight) {
+        dismissedInsights.insert(Self.key(insight))
+    }
+
+    private static func key(_ insight: Insight) -> String { "\(insight.kind.rawValue)|\(insight.app ?? "")" }
 
     /// The stats the menu bar draws: on, and readable on this Mac.
     var shownStats: [MenuBarStat] { menuBar.visible.filter(isAvailable) }

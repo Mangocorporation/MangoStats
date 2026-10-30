@@ -29,6 +29,27 @@ public struct ProcessSort: Equatable, Sendable {
     }
 }
 
+/// Which processes the table lists (S-038).
+public enum ProcessKind: String, CaseIterable, Sendable {
+    case all, apps, background
+
+    public var title: String {
+        switch self {
+        case .all: "All"
+        case .apps: "Apps"
+        case .background: "Background"
+        }
+    }
+
+    public func includes(_ row: ProcessRowData) -> Bool {
+        switch self {
+        case .all: true
+        case .apps: row.isApp
+        case .background: !row.isApp
+        }
+    }
+}
+
 public enum ProcessTable {
     /// Rows that match `query` by name (any case) or exactly by PID (S-013).
     public static func filter(_ rows: [ProcessRowData], query: String) -> [ProcessRowData] {

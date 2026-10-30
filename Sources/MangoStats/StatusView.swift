@@ -1,8 +1,7 @@
 import SwiftUI
 import MangoStatsKit
 
-/// The Status window: eight cards in a 4 × 2 grid and the process table,
-/// laid out like local/reference/status-window.png.
+/// The main window: Overview | History tabs (design/reference/overview.png).
 struct StatusView: View {
     @Environment(AppModel.self) private var model
     @Environment(\.openSettings) private var openSettings
@@ -17,10 +16,11 @@ struct StatusView: View {
                     .padding(.top, Metric.windowTop)
                     .padding(.bottom, Metric.windowMargin)
             } else {
-                dashboard
+                OverviewView()
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .background(Ink.windowBackground)
         .overlay(alignment: .top) {
             if !KitGallery.enabled {
                 @Bindable var model = model
@@ -28,7 +28,6 @@ struct StatusView: View {
                     .padding(.top, Metric.tabBarTop)
             }
         }
-        .background(Ink.windowBackground)
         .ignoresSafeArea()
         .background(WindowChrome())
         .focusEffectDisabled()
@@ -41,79 +40,156 @@ struct StatusView: View {
             Snapshot.runIfRequested(model: model, openSettings: openSettings)
         }
     }
+}
 
-    private var dashboard: some View {
+/// The Overview page: what's worth a look, the stats, and the processes.
+struct OverviewView: View {
+    @Environment(AppModel.self) private var model
+    @Environment(\.openSettings) private var openSettings
+
+    var body: some View {
         let data = model.status
-        return VStack(spacing: Metric.cardGap) {
-            CardGrid {
-                HealthCard(data: data)
-                CPUCard(data: data)
-                GPUCard(data: data)
-                MemoryCard(data: data)
+        ScrollView {
+            VStack(alignment: .leading, spacing: Metric.sectionGap) {
+                header(data)
+                HStack(alignment: .top, spacing: Metric.cardGap) {
+                    InsightCard(data: data)
+                        .containerRelativeFrame(.horizontal) { width, _ in
+                            (width - Metric.windowMargin * 2 - Metric.cardGap) * Metric.insightRatio
+                        }
+                    StorageCard(data: data)
+                }
+                HStack(spacing: Metric.cardGap) {
+                    CPUCard(data: data)
+                    GPUCard(data: data)
+                    NetworkCard(data: data)
+                    BatteryCard(data: data)
+                    FanCard(data: data)
+                }
+                ProcessTableView(data: data)
             }
-            CardGrid {
-                BatteryCard(data: data)
-                DiskCard(data: data)
-                NetworkCard(data: data)
-                FanCard(data: data)
-            }
-            ProcessTableView(data: data)
+            .padding(.horizontal, Metric.windowMargin)
+            .padding(.top, Metric.windowTop)
+            .padding(.bottom, Metric.windowMargin)
         }
-        .padding(.horizontal, Metric.windowMargin)
-        .padding(.top, Metric.windowTop)
-        .padding(.bottom, Metric.windowMargin)
+        .scrollIndicators(.automatic)
+    }
+
+    private func header(_ data: StatusData) -> some View {
+        HStack(alignment: .center) {
+            VStack(alignment: .leading, spacing: Metric.iconGap) {
+                Text("Overview").kitType(.pageTitle).foregroundStyle(Ink.text)
+                Text(model.healthLine).kitType(.pageSubtitle).foregroundStyle(Ink.secondary)
+                    .help(data.healthReasons.isEmpty ? "Nothing needs attention" : data.healthReasons.joined(separator: "\n"))
+            }
+            Spacer()
+            LivePill(text: "Live · every \(model.refreshInterval) s")
+            Button("Settings…", systemImage: KitIcon.settings.symbol) {
+                NSApp.activate()
+                openSettings()
+            }
+            .buttonStyle(KitIconButtonStyle(size: Metric.iconButton, outlined: true))
+            .keyboardShortcut(",")
+            .help("Open Settings (⌘,)")
+        }
     }
 }
 
-/// One row of cards: the first is wider (Health, Battery), the rest share the space.
-nonisolated private struct CardGrid: Layout {
-    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        CGSize(width: proposal.width ?? Metric.windowWidth, height: Metric.cardHeight)
-    }
+// MARK: - Insight and storage
 
-    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-        let gaps = Metric.cardGap * CGFloat(subviews.count - 1)
-        let unit = (bounds.width - gaps) / (CGFloat(subviews.count - 1) + Metric.wideCardRatio)
-        var x = bounds.minX
-        for (index, subview) in subviews.enumerated() {
-            let width = index == 0 ? unit * Metric.wideCardRatio : unit
-            subview.place(at: CGPoint(x: x, y: bounds.minY), proposal: ProposedViewSize(width: width, height: bounds.height))
-            x += width + Metric.cardGap
-        }
-    }
-}
-
-// MARK: - Cards
-
-private struct HealthCard: View {
+/// The most urgent thing worth a look, or a calm note (S-037).
+struct InsightCard: View {
+    @Environment(AppModel.self) private var model
     let data: StatusData
 
     var body: some View {
-        KitCard {
-            HStack(spacing: Metric.iconGap) {
-                KitIcon.health.view(color: Ink.health)
-                Text("Health").kitType(.cardHeader).foregroundStyle(Ink.health)
-                Spacer(minLength: Metric.iconGap)
-                KitPill(text: data.chip)
-                KitPill(text: data.ram)
-                KitPill(text: data.macOS)
-            }
-            .frame(height: Metric.pillHeight)
-            HStack(alignment: .top) {
-                VStack(alignment: .leading, spacing: 0) {
-                    HStack(alignment: .firstTextBaseline, spacing: Metric.iconGap) {
-                        HeroValue(value: data.health)
-                        Text(data.healthWord).kitType(.healthWord).foregroundStyle(Ink.label)
+        let insight = model.currentInsight
+        KitCard(height: Metric.insightHeight, tinted: !insight.isCalm, padding: Metric.insightPadding) {
+            Eyebrow(text: insight.eyebrow, icon: insight.isCalm ? .health : .warning,
+                    color: insight.isCalm ? Ink.live : Ink.accent)
+            Text(insight.title)
+                .kitType(.insightTitle)
+                .foregroundStyle(Ink.text)
+                .lineLimit(1)
+                .padding(.top, Metric.cardGap - 2)
+            HStack(alignment: .center, spacing: Metric.cardGap) {
+                Text(insight.body)
+                    .kitType(.body)
+                    .foregroundStyle(Ink.body)
+                    .lineSpacing(3)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                if !insight.isCalm {
+                    if let app = insight.app {
+                        Button("Review \(app.split(separator: " ").last.map(String.init) ?? app)") { model.review(app) }
+                            .buttonStyle(PrimaryButtonStyle())
+                            .help("Show \(app) in the process list")
                     }
-                    .padding(.top, Metric.heroTop)
-                    Spacer(minLength: 0)
-                    Text(data.healthReason).kitType(.footer).foregroundStyle(Ink.secondary)
-                    Spacer(minLength: 0)
-                    Text(data.uptime).kitType(.footer).foregroundStyle(Ink.secondary)
+                    Button("Dismiss") { model.dismiss(insight) }
+                        .buttonStyle(SecondaryButtonStyle())
+                        .help("Hide this until something changes")
                 }
-                Spacer(minLength: 0)
-                HealthOrb().padding(.top, Metric.iconGap)
             }
+            .padding(.top, Metric.iconGap)
+            Spacer(minLength: Metric.cardGap)
+            KitProgressBar(value: data.memoryFraction, fill: insight.kind == .memory ? Ink.accent : Ink.cpu)
+            HStack {
+                Text(data.memoryUsedLine)
+                Spacer()
+                Text(data.memoryDetailLine)
+            }
+            .kitType(.mono)
+            .foregroundStyle(Ink.body)
+            .padding(.top, Metric.cardGap - 4)
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("\(insight.eyebrow). \(insight.title). \(insight.body)")
+    }
+}
+
+private struct StorageCard: View {
+    let data: StatusData
+
+    var body: some View {
+        KitCard(height: Metric.insightHeight, padding: Metric.insightPadding) {
+            Eyebrow(text: "Storage")
+            Text(data.storageTitle)
+                .kitType(.insightTitle)
+                .foregroundStyle(Ink.text)
+                .padding(.top, Metric.cardGap - 2)
+            Text(data.storageLine)
+                .kitType(.body)
+                .foregroundStyle(Ink.body)
+                .lineLimit(2)
+                .padding(.top, Metric.iconGap)
+            Spacer(minLength: Metric.cardGap)
+            KitProgressBar(value: data.diskUsed, fill: data.diskUsed > 0.9 ? Ink.accent : Ink.disk)
+            Button("See what's using space") { SystemSettings.open("com.apple.settings.Storage") }
+                .buttonStyle(SecondaryButtonStyle())
+                .help("Open Storage in System Settings")
+                .padding(.top, Metric.cardGap)
+        }
+    }
+}
+
+// MARK: - Stat cards
+
+private struct StatCard: View {
+    let title: String
+    let detail: String?
+    let value: String
+    let unit: String?
+    let chart: AnyView
+    let footer: String
+
+    var body: some View {
+        KitCard {
+            CardHeader(title: title, detail: detail)
+            HeroValue(value: value, unit: unit).padding(.top, Metric.heroTop)
+            Spacer(minLength: 0)
+            chart
+            Spacer(minLength: 0)
+            CardFooter(leading: footer)
         }
         .accessibilityElement(children: .combine)
     }
@@ -121,127 +197,38 @@ private struct HealthCard: View {
 
 private struct CPUCard: View {
     let data: StatusData
-
     var body: some View {
-        KitCard {
-            CardHeader(icon: .cpu, title: "CPU", tint: Ink.cpu, pill: data.cpuTemp)
-            HeroValue(value: data.cpu, unit: "%").padding(.top, Metric.heroTop)
-            Spacer(minLength: 0)
-            BarHistory(values: data.cpuHistory)
-            Spacer(minLength: 0)
-            CardFooter(leading: data.cpuFooter)
-        }
-        .accessibilityElement(children: .combine)
+        StatCard(title: "CPU", detail: data.cpuTemp, value: data.cpu, unit: "%",
+                 chart: AnyView(LineChart(values: data.cpuHistory, tint: Ink.cpu)),
+                 footer: data.cpuFooter.capitalizedFirst)
     }
 }
 
 private struct GPUCard: View {
     let data: StatusData
-
     var body: some View {
-        KitCard {
-            CardHeader(icon: .gpu, title: "GPU", tint: Ink.gpu, pill: data.gpuTemp)
-            HeroValue(value: data.gpu, unit: "%").padding(.top, Metric.heroTop)
-            Spacer(minLength: 0)
-            LineChart(values: data.gpuHistory, tint: Ink.gpu)
-            Spacer(minLength: 0)
-            CardFooter(leading: data.gpuFooter)
-        }
-        .accessibilityElement(children: .combine)
-    }
-}
-
-private struct MemoryCard: View {
-    let data: StatusData
-
-    var body: some View {
-        KitCard {
-            CardHeader(icon: .memory, title: "Memory", tint: Ink.memory,
-                       pill: data.memoryPressure == "--" ? nil : "Pressure \(data.memoryPressure.lowercased())",
-                       pillHot: data.memoryPressureLevel != .normal)
-            HeroValue(value: data.memory, unit: "%").padding(.top, Metric.heroTop)
-            Spacer(minLength: 0)
-            AreaChart(values: data.memoryHistory)
-            Spacer(minLength: 0)
-            CardFooter(leading: data.memoryFooter)
-        }
-        .accessibilityElement(children: .combine)
-    }
-}
-
-private struct BatteryCard: View {
-    let data: StatusData
-
-    var body: some View {
-        KitCard {
-            CardHeader(icon: .battery, title: "Battery", tint: Ink.battery, pill: data.batteryHealth)
-            HStack(alignment: .center) {
-                HStack(alignment: .firstTextBaseline, spacing: Metric.iconGap) {
-                    HeroValue(value: data.battery, unit: "%")
-                    if let watts = data.batteryWatts {
-                        Label(watts, systemImage: KitIcon.bolt.symbol)
-                            .labelStyle(BoltLabelStyle())
-                    }
-                }
-                Spacer()
-                Button("Open Battery Settings", systemImage: KitIcon.laptop.symbol) {
-                    SystemSettings.open("com.apple.Battery-Settings.extension")
-                }
-                .buttonStyle(RingButtonStyle(progress: data.batteryLevel))
-                .help("Open Battery settings")
-                Button("Open Energy Settings", systemImage: KitIcon.waves.symbol) {
-                    SystemSettings.open("com.apple.Battery-Settings.extension")
-                }
-                .buttonStyle(RingButtonStyle(progress: 0.8))
-                .help("Open Energy settings")
-            }
-            .padding(.top, Metric.iconGap)
-            Text(data.batteryState).kitType(.footer).foregroundStyle(Ink.secondary)
-            Spacer(minLength: 0)
-            CardFooter(leading: data.batteryDrain)
-        }
-    }
-}
-
-private struct BoltLabelStyle: LabelStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        HStack(spacing: 2) {
-            configuration.icon.kitType(.unit)
-            configuration.title.kitType(.unit)
-        }
-        .foregroundStyle(Ink.label)
-    }
-}
-
-private struct DiskCard: View {
-    let data: StatusData
-
-    var body: some View {
-        KitCard {
-            CardHeader(icon: .disk, title: "Free space", tint: Ink.network, pill: data.diskTotal)
-            HeroValue(value: data.diskFree, unit: data.diskFreeUnit).padding(.top, Metric.heroTop)
-            Spacer(minLength: 0)
-            KitProgressBar(value: data.diskUsed)
-            Spacer(minLength: 0)
-            CardFooter(leading: data.diskFooter)
-        }
-        .accessibilityElement(children: .combine)
+        StatCard(title: "GPU", detail: data.gpuTemp, value: data.gpu, unit: "%",
+                 chart: AnyView(LineChart(values: data.gpuHistory, tint: Ink.gpu)),
+                 footer: data.gpuFooter.capitalizedFirst)
     }
 }
 
 private struct NetworkCard: View {
     let data: StatusData
-
     var body: some View {
-        KitCard {
-            CardHeader(icon: .network, title: "Network", tint: Ink.network, pill: data.networkInterface)
-            HeroValue(value: data.network, unit: data.networkUnit).padding(.top, Metric.heroTop)
-            Spacer(minLength: 0)
-            LineChart(values: data.networkHistory, tint: Ink.network, ceiling: nil)
-            Spacer(minLength: 0)
-            CardFooter(leading: data.networkUpload, trailing: data.networkLatency)
-        }
-        .accessibilityElement(children: .combine)
+        StatCard(title: "Network", detail: data.networkInterface, value: data.network, unit: data.networkUnit,
+                 chart: AnyView(LineChart(values: data.networkHistory, tint: Ink.network, ceiling: nil)),
+                 footer: data.networkLine)
+    }
+}
+
+private struct BatteryCard: View {
+    let data: StatusData
+    var body: some View {
+        StatCard(title: "Battery", detail: data.hasBattery ? data.batteryHealth.lowercased() : nil,
+                 value: data.hasBattery ? data.battery : "--", unit: "%",
+                 chart: AnyView(LineChart(values: data.batteryHistory, tint: Ink.battery)),
+                 footer: data.batteryLine)
     }
 }
 
@@ -250,14 +237,19 @@ private struct FanCard: View {
 
     var body: some View {
         KitCard {
-            CardHeader(icon: .fan, title: "Fan", tint: Ink.gpu, pill: data.fanSpeed)
-            HeroValue(value: data.fanRPM, unit: "RPM").padding(.top, Metric.iconGap)
+            CardHeader(title: "Fan") { FanModeMenu() }
+            HeroValue(value: data.fanRPM, unit: data.hasFan ? "RPM" : nil).padding(.top, Metric.heroTop)
             Spacer(minLength: 0)
-            FanModePicker()
+            LineChart(values: data.fanHistory, tint: Ink.secondary, ceiling: 1)
             Spacer(minLength: 0)
             CardFooter(leading: data.fanNote)
         }
     }
+}
+
+extension String {
+    /// "idle · 0.9W" -> "Idle · 0.9W".
+    var capitalizedFirst: String { prefix(1).uppercased() + dropFirst() }
 }
 
 /// Opens a System Settings pane by its extension id.
